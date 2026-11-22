@@ -30,7 +30,7 @@
 
 MaiBrowser is an early-stage browser that keeps its data on your machine. The browser shell is a native Lynx view rather than a web app: the same ReactLynx components run on Windows through Lynxtron and CEF, and on Android through Sparkling and the system WebView.
 
-Version 0.1.0 is the first public release. It includes the shared tabbed UI, history, bookmarks, downloads records, userscripts, themes, and local storage on both platforms. The Windows installer is not code-signed, and the Android APK is debug-signed; both are suitable for evaluation rather than production distribution.
+Version 0.1.0 is the first public release. It includes the shared tabbed UI, history, bookmarks, download records, userscripts, themes, and local storage on both platforms. The Windows installer is not code-signed, and the Android APK is debug-signed; both are suitable for evaluation rather than production distribution.
 
 ## Install
 
@@ -70,7 +70,7 @@ Release files and checksums live on the [releases page](https://github.com/Maica
 
 **Userscripts without an extension runtime.** MaiBrowser parses Tampermonkey metadata, matches `@match`, `@include`, and `@exclude`, and provides a `GM_*` / `GM.*` bridge for values, XHR, and menus. Scripts can be installed, enabled, disabled, updated, and removed from the built-in manager.
 
-**Local-first storage.** On Windows, history, bookmarks, downloads, userscripts, script values, and tab sessions are stored in a local DuckDB database. Android 0.1.0 keeps the equivalent state in a private JSON snapshot. There is no account, no cloud sync, and no telemetry.
+**Local-first storage.** On Windows, history, bookmarks, downloads, userscripts, script values, and tab sessions are stored in a local DuckDB database. Android 0.1.0 keeps the equivalent state in a private JSON snapshot. There are no accounts, no cloud sync, and no telemetry.
 
 ## Architecture
 
