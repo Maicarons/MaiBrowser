@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MaiBrowser Test Pages</title>
+  <style>
+    body { font-family: "Segoe UI", system-ui, sans-serif; background: #0b1014; color: #e8f0f4; margin: 0; padding: 40px; }
+    main { max-width: 760px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 6px; }
+    p { color: #9babb7; line-height: 1.7; }
+    a { display: block; color: #2dd4bf; text-decoration: none; padding: 12px 14px; border: 1px solid #22313b; border-radius: 10px; margin: 10px 0; background: #111a20; }
+    a:hover { border-color: #2dd4bf; }
+    small { color: #6d7f8c; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>MaiBrowser Test Pages</h1>
+    <p>本地验证 CEF 渲染、标签页、导航、油猴注入和 DuckDB 历史记录。</p>
+    <a href="/basic.html">Basic page <small>标题、链接、表单</small></a>
+    <a href="/userscript.html">Userscript target <small>用于测试 @match / GM_*</small></a>
+    <a href="/spa.html">SPA navigation <small>pushState 地址栏同步</small></a>
+    <a href="/download.html">Download <small>下载链接</small></a>
+    <a href="/csp.html">CSP page <small>严格 CSP 下的脚本注入</small></a>
+    <a href="/slow.html">Slow page <small>加载状态与停止按钮</small></a>
+  </main>
+</body>
+</html>

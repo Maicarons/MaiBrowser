@@ -1,0 +1,26 @@
+{
+  "name": "@maibrowser/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@maibrowser/core": "workspace:*",
+    "@maibrowser/i18n": "workspace:*",
+    "@maibrowser/storage": "workspace:*",
+    "@maibrowser/userscript": "workspace:*"
+  },
+  "peerDependencies": {
+    "@lynx-js/lynx-ui": "^3.143.0",
+    "@lynx-js/motion": "^0.0.8",
+    "@lynx-js/react": ">=0.129.0",
+    "@lynx-js/types": "^4.4.2"
+  },
+  "types": "./src/index.ts"
+}

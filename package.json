@@ -1,0 +1,31 @@
+{
+  "name": "maibrowser",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "bun@1.3.1",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --cwd apps/desktop dev",
+    "build": "bun run --cwd apps/desktop build",
+    "test": "bun test packages/core/src/index.test.ts packages/i18n/src/index.test.ts packages/userscript/src/index.test.ts packages/ui/src/localBridge.test.ts packages/ui/src/theme.test.ts apps/desktop/src/main/desktop/duckdb.test.ts",
+    "check": "bun run typecheck && bun run lint && bun run test",
+    "typecheck": "bun run --cwd apps/desktop typecheck",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "serve:test": "bun run scripts/serve-test-pages.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "@lynx-js/motion": "^0.0.8",
+    "@lynx-js/types": "4.4.2",
+    "remixicon": "^4.9.1",
+    "sharp": "^0.35.5",
+    "typescript": "^5.9.3",
+    "vitepress": "^1.6.4"
+  }
+}

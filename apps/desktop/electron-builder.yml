@@ -1,0 +1,52 @@
+productName: "MaiBrowser"
+appId: com.maibrowser
+directories:
+  buildResources: resources
+  output: dist
+  app: dist/desktop
+files:
+  - main.js
+  - preload.js
+  - "**/*.lynx.bundle"
+  - "**/*.js"
+  - "**/*.css"
+  - "**/*.html"
+  - "**/*.json"
+  - "**/*.jsn"
+  - "**/*.png"
+  - "**/*.ico"
+  - "**/*.exe"
+asar: true
+asarUnpack:
+  - statics/
+  - node_modules/@duckdb/**
+  - node_modules/@lynx-js/cef-webview/**
+npmRebuild: false
+afterPack: scripts/after-pack.cjs
+extraResources:
+  - from: src/assets
+    to: assets
+icon: maibrowser.png
+electronBranding:
+  projectName: lynxtron
+  productName: MaiBrowser
+mac:
+  artifactName: MaiBrowser-v${version}-darwin-${arch}.${ext}
+  icon: maibrowser.icns
+  extendInfo:
+    CFBundleURLSchemes:
+      - maibrowser
+  identity: null
+win:
+  icon: maibrowser.ico
+  target:
+    - target: nsis
+      arch: x64
+  artifactName: MaiBrowser-v${version}-win-x64.${ext}
+nsis:
+  artifactName: MaiBrowser-v${version}-win-x64-Setup.${ext}
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
