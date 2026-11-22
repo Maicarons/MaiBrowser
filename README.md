@@ -2,7 +2,9 @@
 
 MaiBrowser 是一个本地优先、跨平台的现代浏览器。界面使用 Lynx 4.x + ReactLynx + `@lynx-js/lynx-ui` 构建，Windows 端由 CEF 渲染网页，Android 端使用系统 WebView，Windows 端的历史、书签、下载记录和油猴脚本存储在 DuckDB 中；Android 0.1.0 使用应用私有的 JSON 状态快照。
 
-> 当前状态：0.1.0 首个版本已完成 Windows x64（NSIS）与 Android（APK）构建，共享 UI、CEF / 系统 WebView、油猴脚本和本地存储均已跑通。Windows 安装包见 `apps/desktop/dist/MaiBrowser-v0.1.0-win-x64-Setup.exe`，Android 调试 APK 见 `apps/android/android/app/build/outputs/apk/debug/app-debug.apk`。
+> 当前状态：0.1.0 首个公开版本已发布到 [GitHub Releases](https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.0)，包含 Windows x64（NSIS）与 Android（调试 APK）。共享 UI、CEF / 系统 WebView、油猴脚本和本地存储均已跑通。
+>
+> 仓库：<https://github.com/Maicarons/MaiBrowser>
 
 ## 特性
 
