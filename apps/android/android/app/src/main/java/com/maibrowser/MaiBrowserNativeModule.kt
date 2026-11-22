@@ -104,6 +104,6 @@ class MaiBrowserNativeModule(context: Context) : LynxModule(context) {
     }
 
     companion object {
-        private const val USER_AGENT = "MaiBrowser/0.1 (Android)"
+        private const val USER_AGENT = "MaiBrowser/0.1.1 (Android)"
     }
 }

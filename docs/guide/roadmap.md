@@ -1,5 +1,12 @@
 # 路线图
 
+## 0.1.1 — 补丁版本
+
+- [x] README 改为英文主文档并新增 `README_zh.md`
+- [x] 文档站部署到 GitHub Pages
+- [x] 修正英文外观设置中的内部库名文案
+- [x] Windows 安装包与 Android APK 以 `0.1.1` 重新构建
+
 ## 0.1.0 — Windows + Android 首个版本
 
 - [x] Lynxtron + CEF 桌面壳

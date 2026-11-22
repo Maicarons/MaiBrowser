@@ -65,6 +65,6 @@ bun run docs:build    # VitePress
 - Windows 数据库：`%APPDATA%/@maibrowser/desktop/maibrowser.duckdb`
 - Windows 下载：系统下载目录下的 `MaiBrowser/`
 - Android 状态：应用私有目录 `files/maibrowser-state.json`
-- Android 下载：系统下载目录（0.1.0 仅记录元数据）
+- Android 下载：系统下载目录（0.1.x 仅记录元数据）
 
-Windows 数据库使用 DuckDB，不使用 SQLite。删除数据库会同时删除历史、书签、脚本和会话。Android 0.1.0 使用 JSON 快照，迁移到 DuckDB 会在 0.2 处理。
+Windows 数据库使用 DuckDB，不使用 SQLite。删除数据库会同时删除历史、书签、脚本和会话。Android 0.1.x 使用 JSON 快照；DuckDB 迁移推迟到 0.3 评估，见 [v0.2 升级研究](/guide/v0.2-plan)。

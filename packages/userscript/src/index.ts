@@ -221,7 +221,7 @@ const SHIM = String.raw`
     script: __MB_META,
     scriptMetaStr: __MB_META.raw || '',
     scriptHandler: 'MaiBrowser',
-    version: '0.1.0',
+    version: '0.1.1',
     userAgent: navigator.userAgent
   };
   function GM_getValue(key, defaultValue) {

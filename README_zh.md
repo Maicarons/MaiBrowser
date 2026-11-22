@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.0"><img src="https://img.shields.io/github/v/release/Maicarons/MaiBrowser?style=flat-square&color=2dd4bf&label=release" alt="最新版本" /></a>
+  <a href="https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.1"><img src="https://img.shields.io/github/v/release/Maicarons/MaiBrowser?style=flat-square&color=2dd4bf&label=release" alt="最新版本" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-2dd4bf?style=flat-square" alt="AGPL-3.0 许可证" /></a>
   <a href="https://github.com/Maicarons/MaiBrowser/releases"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Android-2dd4bf?style=flat-square" alt="Windows 与 Android" /></a>
   <a href="https://maicarons.github.io/MaiBrowser/"><img src="https://img.shields.io/badge/docs-website-2dd4bf?style=flat-square" alt="文档站点" /></a>
@@ -30,23 +30,23 @@
 
 MaiBrowser 是一个仍处于早期阶段的浏览器，数据默认留在本机。浏览器外壳不是 Web 应用，而是原生 Lynx 视图：同一套 ReactLynx 组件在 Windows 上通过 Lynxtron 与 CEF 运行，在 Android 上通过 Sparkling 与系统 WebView 运行。
 
-0.1.0 是首个公开版本，包含共享的标签页 UI、历史、书签、下载记录、油猴脚本、主题和本地存储。Windows 安装包未签名，Android APK 为调试签名；当前版本适合评估和试用，尚不适合作为生产分发版本。
+0.1.1 是当前公开版本。0.1.0 首次带来了共享标签页 UI、历史、书签、下载记录、油猴脚本、主题和本地存储；0.1.1 重建了 Windows 与 Android 安装包，修正英文动效说明，并包含新的 README 与文档。Windows 安装包未签名，Android APK 为调试签名；当前版本适合评估和试用，尚不适合作为生产分发版本。
 
 ## 安装
 
 ### Windows
 
-- **下载：** [MaiBrowser v0.1.0 Windows x64](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.0/MaiBrowser-v0.1.0-win-x64-Setup.exe)
+- **下载：** [MaiBrowser v0.1.1 Windows x64](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.1/MaiBrowser-v0.1.1-win-x64-Setup.exe)
 - **要求：** Windows 10 或 11，x64
 - **说明：** NSIS 安装包未签名，Windows SmartScreen 可能提示风险。运行前请使用 `SHA256SUMS.txt` 校验下载文件。
 
 ### Android
 
-- **下载：** [MaiBrowser v0.1.0 APK](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.0/app-debug.apk)
+- **下载：** [MaiBrowser v0.1.1 APK](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.1/MaiBrowser-v0.1.1-android-debug.apk)
 - **要求：** Android 7.0（API 24）或更高版本
 - **说明：** APK 为调试签名，未上架 Google Play。请在浏览器或文件管理器中允许“安装未知应用”，然后打开 APK。支持 `armeabi-v7a` 与 `arm64-v8a`。
 
-安装包、APK 与校验文件均位于 [Releases 页面](https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.0)。
+安装包、APK 与校验文件均位于 [Releases 页面](https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.1)。
 
 ## 截图
 
@@ -70,7 +70,7 @@ MaiBrowser 是一个仍处于早期阶段的浏览器，数据默认留在本机
 
 **无需扩展运行时的油猴脚本。** 解析 Tampermonkey 元数据，支持 `@match`、`@include`、`@exclude`，并提供用于值存储、XHR 和菜单的 `GM_*` / `GM.*` 桥接。脚本可在内置管理页中安装、启停、检查更新和删除。
 
-**本地优先存储。** Windows 端的历史、书签、下载记录、脚本、脚本值和标签页会话保存在本地 DuckDB 数据库中；Android 0.1.0 使用应用私有目录中的 JSON 状态快照。没有账号、没有云同步、没有遥测。
+**本地优先存储。** Windows 端的历史、书签、下载记录、脚本、脚本值和标签页会话保存在本地 DuckDB 数据库中；Android 0.1.x 使用应用私有目录中的 JSON 状态快照。没有账号、没有云同步、没有遥测。
 
 ## 架构
 
@@ -132,11 +132,11 @@ Android 的构建、JDK 选择、模拟器配置与 WebView 调试方法见 [And
 - **Windows 数据库：** `%APPDATA%\@maibrowser\desktop\maibrowser.duckdb`
 - **Windows 下载目录：** 系统下载目录下的 `MaiBrowser`
 - **Android 状态：** 应用私有目录 `files/maibrowser-state.json`
-- **Android 下载：** 0.1.0 仅记录元数据，尚未接入文件写入
+- **Android 下载：** 0.1.x 仅记录元数据，尚未接入文件写入
 
-MaiBrowser 不包含账号、云同步、遥测、广告拦截器或密码管理器。油猴脚本可以读取和修改其匹配的页面，请像对待其他浏览器中的脚本一样谨慎安装。Android 0.1.0 的状态快照未加密，依赖 Android 应用沙箱保护；其油猴桥接是页面世界 + 窄桥接的 beta 方案，不是完整沙箱。
+MaiBrowser 不包含账号、云同步、遥测、广告拦截器或密码管理器。油猴脚本可以读取和修改其匹配的页面，请像对待其他浏览器中的脚本一样谨慎安装。Android 0.1.x 的状态快照未加密，依赖 Android 应用沙箱保护；其油猴桥接是页面世界 + 窄桥接的 beta 方案，不是完整沙箱。
 
-## 0.1.0 已知限制
+## 0.1.x 已知限制
 
 - 下载尚未接入 CEF 或 Android 的下载管理器，下载页目前只管理记录。
 - 隐私标签不隔离 Cookie，只避免写入历史与会话。

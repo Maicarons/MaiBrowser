@@ -1,12 +1,18 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 (2026-11-22)
+
+补丁版本：修正英文文案并重建安装包，不包含功能性 API 变更。
+
+### Fixed
+
+- 英文外观设置中的动效说明不再显示内部库名 `@lynx-js/motion`，与其他界面文案保持一致。
+- Windows 安装包与 Android APK 使用统一的 `0.1.1` 版本号重新构建；Android `versionCode` 提升到 2。
 
 ### Changed
 
 - README 改为英文主文档，新增 `README_zh.md`、Hero 图、徽章与桌面/Android 截图。
 - 文档站启用 GitHub Pages（`/MaiBrowser/`），补充 v0.2 升级研究、路线图和仓库主页链接。
-- 英文外观设置中的动效说明不再显示内部库名，与其他界面文案保持一致。
 
 ## 0.1.0 (2026-11-22)
 

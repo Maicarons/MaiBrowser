@@ -57,9 +57,9 @@ curl http://127.0.0.1:9222/json
 
 ## 存储
 
-Android 0.1.0 使用 `filesDir/maibrowser-state.json` 保存设置、标签页、历史、书签、下载记录、脚本和脚本值。它是共享 UI 本地状态的一份 JSON 快照，保证首个版本可以完整离线使用。
+Android 0.1.x 使用 `filesDir/maibrowser-state.json` 保存设置、标签页、历史、书签、下载记录、脚本和脚本值。它是共享 UI 本地状态的一份 JSON 快照，保证首个版本可以完整离线使用。
 
-桌面端使用 DuckDB。Android 的 DuckDB NDK/JNI 构建是 0.2 的独立工作项；在它稳定前不引入 SQLite，避免同一产品出现第二套 SQL 方言。
+桌面端使用 DuckDB。Android 的 DuckDB NDK/JNI 构建推迟到 0.3 评估，见 [v0.2 升级研究](/guide/v0.2-plan)；在它稳定前不引入 SQLite，避免同一产品出现第二套 SQL 方言。
 
 ## 已知限制
 

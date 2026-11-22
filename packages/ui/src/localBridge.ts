@@ -368,14 +368,14 @@ export function createLocalBridge() {
         const kind = platform()
         return {
           name: 'MaiBrowser',
-          version: '0.1.0',
+          version: '0.1.1',
           platform: kind,
           dataPath: '',
           dbPath: '',
           downloadsPath: '',
           engine: kind === 'android' ? 'Android System WebView' : 'Lynxtron',
           versionLabel:
-            kind === 'android' ? '0.1.0 · Android' : '0.1.0 · Preview',
+            kind === 'android' ? '0.1.1 · Android' : '0.1.1 · Preview',
         } as AppInfo as T
       }
       if (method === 'app:theme') return 'light' as T

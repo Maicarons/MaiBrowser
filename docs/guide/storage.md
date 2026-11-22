@@ -38,8 +38,8 @@ bridge.call('store:call', { method: 'listHistory', args: [100] })
 
 主进程只允许白名单方法。`store:getSettings` / `store:saveSettings` 是便捷方法，分别读写 `browser.settings`。
 
-## Android（0.1.0）
+## Android（0.1.x）
 
-Android 0.1.0 不链接 DuckDB，而是把同一组状态保存在 `filesDir/maibrowser-state.json`：设置、窗口/标签页会话、历史、书签、下载记录、脚本与脚本值。共享 UI 通过 `packages/ui/src/localBridge.ts` 读写快照，原生模块 `MaiBrowserNative` 负责落盘。这样首个版本在没有 NDK 构建链的设备上也能完整离线运行。
+Android 0.1.x 不链接 DuckDB，而是把同一组状态保存在 `filesDir/maibrowser-state.json`：设置、窗口/标签页会话、历史、书签、下载记录、脚本与脚本值。共享 UI 通过 `packages/ui/src/localBridge.ts` 读写快照，原生模块 `MaiBrowserNative` 负责落盘。这样首个版本在没有 NDK 构建链的设备上也能完整离线运行。
 
-DuckDB 的 Android NDK/JNI 构建是 0.2 的独立工作项。在它稳定前不引入 SQLite，避免同一产品出现第二套 SQL 方言；迁移到 DuckDB 时需要一次性导入这份 JSON 快照。
+DuckDB 的 Android NDK/JNI 构建推迟到 0.3 评估。在它稳定前不引入 SQLite，避免同一产品出现第二套 SQL 方言；迁移到 DuckDB 时需要一次性导入这份 JSON 快照。

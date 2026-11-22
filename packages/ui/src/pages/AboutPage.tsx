@@ -32,7 +32,7 @@ export function AboutPage(props: InternalPageProps) {
         </text>
         <view style={{ height: '12px' }} />
         <text style={{ color: theme.textMuted, fontSize: '11px' }}>
-          Version {appInfo?.version ?? '0.1.0'} ·{' '}
+          Version {appInfo?.version ?? '0.1.1'} ·{' '}
           {appInfo?.platform ?? 'windows'}
         </text>
         <text
