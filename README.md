@@ -1,98 +1,166 @@
-# MaiBrowser
+<div align="center">
+  <img src="docs/public/brand/hero.png" alt="MaiBrowser — a local-first browser for Windows and Android" width="100%" />
+</div>
 
-MaiBrowser 是一个本地优先、跨平台的现代浏览器。界面使用 Lynx 4.x + ReactLynx + `@lynx-js/lynx-ui` 构建，Windows 端由 CEF 渲染网页，Android 端使用系统 WebView，Windows 端的历史、书签、下载记录和油猴脚本存储在 DuckDB 中；Android 0.1.0 使用应用私有的 JSON 状态快照。
+<h1 align="center">MaiBrowser</h1>
 
-> 当前状态：0.1.0 首个公开版本已发布到 [GitHub Releases](https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.0)，包含 Windows x64（NSIS）与 Android（调试 APK）。共享 UI、CEF / 系统 WebView、油猴脚本和本地存储均已跑通。
->
-> 仓库：<https://github.com/Maicarons/MaiBrowser>
+<p align="center">
+  <strong>A local-first browser for Windows and Android, built with Lynx and ReactLynx.</strong>
+</p>
 
-## 特性
+<p align="center">
+  One shared browser UI · CEF on Windows · system WebView on Android · DuckDB on desktop
+</p>
 
-- **一套 UI，两端复用**：标签页、地址栏、历史、书签、下载、设置和脚本管理都位于 `packages/ui`，桌面与 Android 共享。
-- **可定制外观**：设置拆分为外观、搜索引擎、启动时、语言、隐私、下载、存储等独立页面；支持浅色/深色/跟随系统、7 种强调色和界面动效开关。
-- **统一的图标与动效**：使用 Remix Icon 图标集，通过运行时着色适配主题；页面进入、菜单弹出、提示条和主题预览使用 `@lynx-js/motion`。
-- **日常浏览**：标签固定、恢复关闭的标签、隐私标签、地址栏历史/书签补全、页内查找、缩放、打印和书签栏。
-- **原生油猴脚本**：Tampermonkey 兼容的元数据解析、`@match` / `@include` / `@exclude` 匹配，以及 `GM_*` / `GM.*` 桥接 API。
-- **书签与脚本管理**：书签 HTML 导入/导出（桌面）、脚本安装/启停/删除/更新检查。
-- **DuckDB 存储（Windows）**：历史、书签、下载、脚本、脚本值和标签页会话统一落在 `maibrowser.duckdb`；Android 端当前使用等价的状态快照。
-- **本地优先**：没有账号、没有云同步、没有遥测；数据默认只在本机。
-- **Lynx 原生 UI**：不使用 Web 前端渲染浏览器外壳，桌面端通过 Lynxtron 承载 Lynx 视图。
-- **AGPL-3.0**：代码和文档使用同一许可证。
+<p align="center">
+  <a href="https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.0"><img src="https://img.shields.io/github/v/release/Maicarons/MaiBrowser?style=flat-square&color=2dd4bf&label=release" alt="Latest release" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-2dd4bf?style=flat-square" alt="AGPL-3.0 license" /></a>
+  <a href="https://github.com/Maicarons/MaiBrowser/releases"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Android-2dd4bf?style=flat-square" alt="Windows and Android" /></a>
+  <a href="https://maicarons.github.io/MaiBrowser/"><img src="https://img.shields.io/badge/docs-website-2dd4bf?style=flat-square" alt="Documentation" /></a>
+  <a href="https://github.com/Maicarons/MaiBrowser/releases"><img src="https://img.shields.io/github/downloads/Maicarons/MaiBrowser/total?style=flat-square&color=2dd4bf" alt="Downloads" /></a>
+</p>
 
-## 技术栈
+<p align="center">
+  <a href="#install">Install</a> ·
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="https://maicarons.github.io/MaiBrowser/">Documentation</a> ·
+  <a href="docs/guide/v0.2-plan.md">Roadmap</a> ·
+  <a href="README_zh.md">简体中文</a>
+</p>
 
-| 层       | Windows                                   | Android                             |
-| -------- | ----------------------------------------- | ----------------------------------- |
-| UI       | Lynx 4.x · ReactLynx · `@lynx-js/lynx-ui` | 同一套 UI                           |
-| 外壳     | Lynxtron（Lynx + Node.js）                | Sparkling / LynxView                |
-| 网页引擎 | CEF（`@lynx-js/cef-webview`）             | 系统 WebView                        |
-| 存储     | DuckDB（`@duckdb/node-api`）              | JSON 快照（DuckDB NDK 为 0.2 工作） |
-| 包管理   | Bun 1.3+                                  | Bun + Gradle                        |
+MaiBrowser is an early-stage browser that keeps its data on your machine. The browser shell is a native Lynx view rather than a web app: the same ReactLynx components run on Windows through Lynxtron and CEF, and on Android through Sparkling and the system WebView.
 
-## 目录
+Version 0.1.0 is the first public release. It includes the shared tabbed UI, history, bookmarks, downloads records, userscripts, themes, and local storage on both platforms. The Windows installer is not code-signed, and the Android APK is debug-signed; both are suitable for evaluation rather than production distribution.
 
+## Install
+
+### Windows
+
+- **Download:** [MaiBrowser v0.1.0 for Windows x64](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.0/MaiBrowser-v0.1.0-win-x64-Setup.exe)
+- **Requirements:** Windows 10 or 11, x64
+- **Notes:** The NSIS installer is unsigned, so Windows SmartScreen may show a warning. Verify the download against `SHA256SUMS.txt` before running it.
+
+### Android
+
+- **Download:** [MaiBrowser v0.1.0 APK](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.0/app-debug.apk)
+- **Requirements:** Android 7.0 (API 24) or newer
+- **Notes:** The APK is debug-signed and is not distributed through Google Play. Enable installation from unknown sources for your browser or file manager, then open the APK. It supports `armeabi-v7a` and `arm64-v8a`.
+
+Release files and checksums live on the [releases page](https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.0).
+
+## Screenshots
+
+|                                                     New tab                                                      |                                                         Theme studio                                                         |                                              Settings                                              |
+| :--------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
+| <img src="docs/public/screenshots/newtab.png" alt="MaiBrowser new tab with shortcuts and search" width="100%" /> | <img src="docs/public/screenshots/appearance-dark.png" alt="MaiBrowser dark theme and accent color settings" width="100%" /> | <img src="docs/public/screenshots/settings.png" alt="MaiBrowser settings overview" width="100%" /> |
+
+<p align="center">
+  <img src="docs/public/screenshots/android.png" alt="MaiBrowser running on Android" width="270" />
+</p>
+
+## Highlights
+
+**One UI, two engines.** Tabs, the address bar, history, bookmarks, downloads, settings, and script management live in `packages/ui` and are shared by both platforms. Only the shell and web engine adapters are platform-specific.
+
+**A browser that feels native.** The chrome is rendered by Lynx 4.x and ReactLynx with `@lynx-js/lynx-ui`, not by a hidden browser window. Page content is hosted by CEF on Windows and by the system WebView on Android.
+
+**Everyday browsing.** Pinned tabs, reopen closed tab, private tabs, address-bar autocomplete from history and bookmarks, find in page, zoom, print, a bookmarks bar, and bookmark HTML import/export on desktop.
+
+**Themes that stay out of the way.** Light, dark, and follow-system modes, seven accent colors, compact page transitions, and a motion switch. Content is never hidden while an animation runs.
+
+**Userscripts without an extension runtime.** MaiBrowser parses Tampermonkey metadata, matches `@match`, `@include`, and `@exclude`, and provides a `GM_*` / `GM.*` bridge for values, XHR, and menus. Scripts can be installed, enabled, disabled, updated, and removed from the built-in manager.
+
+**Local-first storage.** On Windows, history, bookmarks, downloads, userscripts, script values, and tab sessions are stored in a local DuckDB database. Android 0.1.0 keeps the equivalent state in a private JSON snapshot. There is no account, no cloud sync, and no telemetry.
+
+## Architecture
+
+| Concern    | Windows                                   | Android                               |
+| ---------- | ----------------------------------------- | ------------------------------------- |
+| Browser UI | Lynx 4.x · ReactLynx · `@lynx-js/lynx-ui` | The same shared UI                    |
+| Shell      | Lynxtron                                  | Sparkling                             |
+| Web engine | CEF via `@lynx-js/cef-webview`            | System WebView via `xelement-webview` |
+| Storage    | DuckDB via `@duckdb/node-api`             | App-private JSON snapshot             |
+| Packaging  | NSIS via `lynxtron-builder`               | Gradle debug APK                      |
+
+```text
+apps/desktop             Lynxtron shell, main-process RPC, CEF setup
+apps/android             Sparkling app, Lynx 4.2, system WebView
+packages/core            Tabs, URLs, search, and other pure models
+packages/ui              Shared browser chrome and internal pages
+packages/storage         DuckDB adapter and SQL migrations
+packages/userscript      Tampermonkey metadata, matching, GM bridge
+packages/i18n           English and Simplified Chinese strings
+packages/engine-contract Browser engine interface
+docs                     VitePress documentation
+test-pages               Local pages for manual engine tests
 ```
-apps/desktop        Lynxtron 桌面应用、主进程 RPC、CEF 初始化
-apps/android        Android 应用（Sparkling + Lynx 4.2 + 系统 WebView）
-packages/core       标签页、URL、搜索等纯函数模型
-packages/ui         浏览器外壳与内部页面（ReactLynx）
-packages/storage    DuckDB 适配层与 SQL 迁移
-packages/userscript Tampermonkey 元数据、匹配与 GM 注入
-packages/i18n       中英文文案
-packages/engine-contract 浏览器引擎接口
-docs                VitePress 文档
-test-pages          本地测试页面
-```
 
-## 开发
+## Development
 
-要求：Windows 10/11、Bun 1.3+、Node.js 22.18+、Visual Studio 2022 C++ 工具链（CEF/Lynxtron 原生依赖）。
+### Requirements
+
+- Windows 10 or 11
+- [Bun](https://bun.sh/) 1.3 or newer
+- Node.js 22.18 or newer
+- Visual Studio 2022 with the C++ desktop workload for the CEF and Lynxtron native dependencies
+- JDK 17, Android SDK, and Gradle 8.2 for Android builds; the Sparkling navigation library also needs JDK 11 available to Gradle
+
+CEF is large. If the native package download is slow or blocked, set `npm_config_custom_cef_webview_binary_url` to a reachable mirror before installing dependencies.
 
 ```bash
 bun install
-bun run dev              # 启动 Lynx + Lynxtron 开发模式
-bun run typecheck        # TypeScript 检查
-bun run test             # core / i18n / userscript / DuckDB 存储测试
-bun run build            # 构建 Lynx bundle 与桌面主进程
-bun run --cwd apps/desktop start   # 构建后启动桌面应用
-bun run --cwd apps/desktop pack    # 生成 Windows NSIS 安装包
-bun run docs:build       # 构建 VitePress 文档
+bun run dev              # Lynx + Lynxtron development mode
+bun run check            # typecheck, lint, and tests
+bun run build            # build the Lynx bundle and desktop main process
+bun run --cwd apps/desktop start   # start the desktop app after a build
+bun run --cwd apps/desktop pack    # build the Windows NSIS installer
+bun run docs:dev         # local documentation site
+bun run docs:build       # static documentation build
 ```
 
-首次安装 Lynxtron/CEF 原生包后，如果 `@lynx-js/lynxtron` 或 `@lynx-js/cef-webview` 的 postinstall 没有执行，可在对应包目录运行：
+If the Lynxtron or CEF postinstall step did not run, execute the package's install script inside its directory:
 
 ```bash
 node install.js
 node scripts/install.js
 ```
 
-CEF 二进制较大；网络受限时可设置 `npm_config_custom_cef_webview_binary_url` 指向可访问的镜像。
+Android build instructions, JDK selection, emulator setup, and WebView debugging are documented in the [Android guide](docs/guide/android.md).
 
-## 数据位置
+## Data and privacy
 
-- Windows 数据库：`%APPDATA%/@maibrowser/desktop/maibrowser.duckdb`（由 `app.getPath('userData')` 决定）
-- Windows 下载目录：系统下载目录下的 `MaiBrowser/`
-- Android 状态快照：应用私有目录 `files/maibrowser-state.json`
-- Android 下载目录：系统下载目录（0.1.0 仅记录元数据，下载写入待接入）
+- **Windows database:** `%APPDATA%\@maibrowser\desktop\maibrowser.duckdb`
+- **Windows downloads:** `MaiBrowser` inside your system Downloads folder
+- **Android state:** app-private `files/maibrowser-state.json`
+- **Android downloads:** recorded as metadata in 0.1.0; writing downloaded files is not wired yet
 
-## 已知限制
+MaiBrowser does not include accounts, cloud sync, telemetry, an ad blocker, or a password manager. Userscripts can read and modify the pages they match, so install them with the same care you would use in any browser. Android 0.1.0 stores its state snapshot unencrypted inside the Android app sandbox, and its userscript bridge is a beta page-world design rather than a full sandbox.
 
-- 隐私标签不隔离 Cookie，只保证不写入历史与会话；多窗口尚未接入。
-- 下载事件尚未接入 CEF 下载管理器，下载页目前管理本地记录。
-- Android 端文件导入/导出和下载写入暂不可用；DuckDB 的 NDK 构建在 0.2。
-- 油猴脚本在页面加载后注入，不是严格的文档起点；Android 端为页面世界 + 窄桥接 beta 方案。
-- Android 上通过自动补全选中地址后，页面会正确导航，但原生输入框的显示值在部分设备上不会立即回填为最终 URL。
-- 站点权限、证书错误和自动更新 UI 尚未接入。
+## Known limitations in 0.1.0
 
-## 安全与隐私
+- Downloads are not connected to the CEF or Android download managers yet; the downloads page manages records only.
+- Private tabs do not isolate cookies. They only avoid writing history and session state.
+- Multi-window browsing, site permission prompts, certificate error pages, and an auto-update UI are not implemented.
+- Android bookmark import/export, file downloads, and DuckDB storage are not available in 0.1.0.
+- Userscripts are injected after page load rather than at the true document start. On Android the bridge is a beta page-world design.
+- After choosing an address-bar suggestion on some Android devices, navigation succeeds but the native input may not immediately show the final URL.
+- The Windows installer is unsigned and the Android APK is debug-signed.
 
-- 不内置广告拦截、密码管理或云同步（P1 规划）。
-- 油猴脚本会读取和修改匹配页面；安装界面会明确提示风险。
-- Android 端 0.1.0 的状态快照未加密，和其他应用私有文件一样受 Android 沙箱保护。
-- Android 端油猴脚本采用页面世界注入 + 窄桥接的 beta 方案，不提供完整沙箱隔离。
+The [v0.2 plan](docs/guide/v0.2-plan.md) covers downloads, permission prompts, Android parity, release engineering, and the storage decision in more detail.
 
-## 许可证
+## Contributing
+
+Issues and pull requests are welcome. Before opening a pull request, run:
+
+```bash
+bun run check
+bun run docs:build
+```
+
+Keep platform-specific behavior behind the engine contract where possible, add tests for pure logic and storage changes, and describe any manual Windows or Android verification in the pull request. The project is maintained on a best-effort basis; there is no CLA.
+
+## License
 
 Copyright (C) 2026 MaiBrowser contributors.
 
-本项目以 GNU Affero General Public License v3.0 发布，详见 [LICENSE](LICENSE)。文档使用同一许可证。
+MaiBrowser is released under the [GNU Affero General Public License v3.0](LICENSE). The documentation is licensed under the same terms.

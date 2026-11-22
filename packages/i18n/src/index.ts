@@ -442,8 +442,7 @@ const en: Dict = {
     'Used for buttons, selection states, and address icons.',
   'appearance.motion': 'Motion',
   'appearance.motionTitle': 'Interface motion',
-  'appearance.motionHint':
-    'Page changes, menus, and toasts use @lynx-js/motion.',
+  'appearance.motionHint': 'Page changes, menus, and toasts animate smoothly.',
   'appearance.interface': 'Interface',
   'appearance.preview': 'Live preview',
   'appearance.previewHint':

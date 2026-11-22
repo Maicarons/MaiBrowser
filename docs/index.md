@@ -20,8 +20,8 @@ features:
     details: 解析 Tampermonkey 元数据，支持 @match/@include/@exclude 与常用 GM_* / GM.* API。
   - title: DuckDB 存储
     details: Windows 端历史、书签、下载、脚本、脚本值和标签页会话统一存储，默认只在本机。
-  - title: Lynx 原生界面
-    details: 浏览器外壳使用 Lynx 4.x + ReactLynx + @lynx-js/lynx-ui，而不是 Web 前端。
-  - title: Lynx 原生界面
-    details: 浏览器外壳使用 Lynx 4.x + ReactLynx + @lynx-js/lynx-ui，而不是 Web 前端。
+  - title: 可定制的外观
+    details: 浅色、深色、跟随系统、7 种强调色和动效开关；页面切换不会以隐藏内容为代价。
+  - title: 本地优先
+    details: 没有账号、云同步或遥测；历史、书签和脚本默认只留在本机。
 ---
