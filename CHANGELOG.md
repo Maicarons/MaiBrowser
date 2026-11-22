@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- README 改为英文主文档，新增 `README_zh.md`、Hero 图、徽章与桌面/Android 截图。
+- 文档站启用 GitHub Pages（`/MaiBrowser/`），补充 v0.2 升级研究、路线图和仓库主页链接。
+- 英文外观设置中的动效说明不再显示内部库名，与其他界面文案保持一致。
+
 ## 0.1.0 (2026-11-22)
 
 首个版本，Windows + Android 优先。
@@ -25,7 +33,7 @@
 
 ### Known limitations
 
-- Android 0.1.0 使用 JSON 状态快照；DuckDB Android NDK/JNI 构建是 0.2 工作项。
+- Android 0.1.0 使用 JSON 状态快照；DuckDB Android NDK/JNI 构建在后续版本评估，详见 `docs/guide/v0.2-plan.md`。
 - 隐私标签不隔离 Cookie；多窗口、下载事件、站点权限、证书错误和自动更新 UI 尚未接入。
 - CEF 下载事件尚未接入下载管理器；下载页面当前管理本地记录。
 - Android 文件下载写入、多窗口和站点权限 UI 尚未接入。
