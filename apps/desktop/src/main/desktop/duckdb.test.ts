@@ -111,6 +111,25 @@ describe('DuckDB storage', () => {
     expect(await store.getScriptValues('u_1')).toEqual({ token: 'abc' })
     await store.deleteScriptValue('u_1', 'token')
     expect(await store.getScriptValues('u_1')).toEqual({})
+    await store.saveScriptResources('u_1', [
+      {
+        scriptId: 'u_1',
+        name: 'require:https://cdn.example.test/lib.js',
+        mime: 'application/javascript',
+        content: 'window.lib = true;',
+      },
+      {
+        scriptId: 'u_1',
+        name: 'resource:logo',
+        mime: 'text/plain',
+        content: 'mai-browser',
+      },
+    ])
+    const resources = await store.listScriptResources('u_1')
+    expect(resources).toHaveLength(2)
+    expect(
+      resources.find((item) => item.name === 'resource:logo')?.content,
+    ).toBe('mai-browser')
     await store.setScriptEnabled('u_1', false)
     const scripts = await store.listScripts()
     expect(scripts[0].enabled).toBe(false)

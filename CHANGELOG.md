@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.2 (2026-11-23)
+
+脚本资源与 Android 存储可靠性更新。
+
+### Added
+
+- 油猴脚本 `@require`：安装或更新时抓取并按声明顺序注入，内容缓存到 `userscript_resources`。
+- 油猴脚本 `@resource`：缓存文本资源，补齐 `GM_getResourceText` / `GM_getResourceURL`（data URI）。
+- 安装/更新时自动补齐缓存；已安装但缺少资源的脚本会在启动刷新时尝试补齐。
+- 单文件资源上限 2 MB，超限或下载失败会中止本次安装/更新并提示。
+
+### Fixed
+
+- Android 状态快照改为临时文件 + `fsync` + 原子 rename 写入；保留 `.bak`，主文件损坏时自动回退。
+- Android 快照加入 `schemaVersion` 字段，为后续迁移留出显式版本位。
+
+### Changed
+
+- Windows、Android 和根 `package.json` 统一为 `0.1.2`；Android `versionCode=3`。
+
 ## 0.1.1 (2026-11-22)
 
 补丁版本：修正英文文案并重建安装包，不包含功能性 API 变更。

@@ -63,6 +63,13 @@ export interface UserScriptRecord {
   updateUrl: string
 }
 
+export interface ScriptResourceRecord {
+  scriptId: string
+  name: string
+  mime: string
+  content: string
+}
+
 export interface TabRecord {
   id: string
   windowId: string
@@ -200,6 +207,12 @@ function asNumber(value: unknown): number {
 
 function asBoolean(value: unknown): boolean {
   return value === true || value === 1 || value === 'true'
+}
+
+function decodeResource(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (value instanceof Uint8Array) return new TextDecoder().decode(value)
+  return String(value ?? '')
 }
 
 function mapHistory(row: Record<string, unknown>): HistoryEntry {
@@ -527,6 +540,42 @@ export class Store {
       [id],
     )
     await this.adapter.execute('DELETE FROM userscripts WHERE id = ?', [id])
+  }
+
+  async listScriptResources(
+    scriptId?: string,
+  ): Promise<ScriptResourceRecord[]> {
+    const rows =
+      scriptId === undefined
+        ? await this.adapter.query<Record<string, unknown>>(
+            'SELECT script_id, name, mime, content FROM userscript_resources ORDER BY script_id, name',
+          )
+        : await this.adapter.query<Record<string, unknown>>(
+            'SELECT script_id, name, mime, content FROM userscript_resources WHERE script_id = ? ORDER BY name',
+            [scriptId],
+          )
+    return rows.map((row) => ({
+      scriptId: String(row.script_id ?? ''),
+      name: String(row.name ?? ''),
+      mime: String(row.mime ?? ''),
+      content: decodeResource(row.content),
+    }))
+  }
+
+  async saveScriptResources(
+    scriptId: string,
+    resources: ScriptResourceRecord[],
+  ): Promise<void> {
+    await this.adapter.execute(
+      'DELETE FROM userscript_resources WHERE script_id = ?',
+      [scriptId],
+    )
+    for (const resource of resources) {
+      await this.adapter.execute(
+        'INSERT INTO userscript_resources (script_id, name, mime, content) VALUES (?, ?, ?, CAST(? AS BLOB))',
+        [scriptId, resource.name, resource.mime, resource.content],
+      )
+    }
   }
 
   async setScriptEnabled(id: string, enabled: boolean): Promise<void> {

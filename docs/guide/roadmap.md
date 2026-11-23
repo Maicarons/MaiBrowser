@@ -1,5 +1,12 @@
 # 路线图
 
+## 0.1.2 — 脚本资源与存储可靠性
+
+- [x] 油猴 `@require` 抓取、缓存与按序注入
+- [x] 油猴 `@resource` 文本资源缓存与 `GM_getResourceText` / `GM_getResourceURL`
+- [x] 资源单文件上限与安装/更新失败提示
+- [x] Android JSON 快照原子写入、`.bak` 回退与 `schemaVersion`
+
 ## 0.1.1 — 补丁版本
 
 - [x] README 改为英文主文档并新增 `README_zh.md`
@@ -31,8 +38,7 @@
 - [ ] 站点权限：摄像头、麦克风、定位、通知、文件选择；允许一次/始终允许/阻止；按站点撤销
 - [ ] 证书错误页：默认拒绝，显示域名与错误码
 - [ ] Android 对齐：文件选择、书签导入/导出、下载写入
-- [ ] 油猴 `@require` / `@resource` 缓存与注入，`GM_download` 接通
-- [ ] Android JSON 快照原子写入、版本迁移与损坏回退
+- [ ] 油猴 `GM_download` 接通下载管理器（`@require` / `@resource` 文本资源已在 0.1.2 完成）
 - [ ] 版本号统一、CI、校验和、发布文档
 - [ ] 隐私标签：若 CEF 请求上下文就绪则实现 Cookie 隔离；否则保持“不记录历史”的诚实文案
 

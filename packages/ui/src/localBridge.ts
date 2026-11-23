@@ -3,6 +3,7 @@ import type {
   Bookmark,
   DownloadRecord,
   HistoryEntry,
+  ScriptResourceRecord,
   TabRecord,
   UserScriptRecord,
 } from '@maibrowser/storage'
@@ -17,6 +18,8 @@ interface LocalState {
   downloads: DownloadRecord[]
   scripts: UserScriptRecord[]
   values: Record<string, Record<string, string>>
+  scriptResources: ScriptResourceRecord[]
+  schemaVersion: number
 }
 
 interface NativeModule {
@@ -39,6 +42,8 @@ function initialState(): LocalState {
     downloads: [],
     scripts: [],
     values: {},
+    scriptResources: [],
+    schemaVersion: 1,
   }
 }
 
@@ -119,7 +124,14 @@ export function createLocalBridge() {
     __MAIBROWSER_LOCAL_STATE__?: LocalState
   }
   const existing = scope.__MAIBROWSER_LOCAL_STATE__
-  let state: LocalState = existing ?? initialState()
+  let state: LocalState = existing
+    ? {
+        ...initialState(),
+        ...existing,
+        scriptResources: existing.scriptResources ?? [],
+        schemaVersion: 1,
+      }
+    : initialState()
   let loading: Promise<void> | null = existing ? Promise.resolve() : null
   let saveTimer: ReturnType<typeof setTimeout> | null = null
   let fetchText: ((url: string) => Promise<string>) | null = null
@@ -138,6 +150,10 @@ export function createLocalBridge() {
             ...initialState(),
             ...parsed,
             settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
+            scriptResources: Array.isArray(parsed.scriptResources)
+              ? parsed.scriptResources
+              : [],
+            schemaVersion: 1,
           }
         }
       } catch {
@@ -297,6 +313,34 @@ export function createLocalBridge() {
         const id = String(args[0] ?? '')
         state.scripts = state.scripts.filter((script) => script.id !== id)
         delete state.values[id]
+        state.scriptResources = state.scriptResources.filter(
+          (resource) => resource.scriptId !== id,
+        )
+        persist()
+        return undefined as T
+      }
+      case 'listScriptResources': {
+        const scriptId = args[0] === undefined ? undefined : String(args[0])
+        const rows = scriptId
+          ? state.scriptResources.filter(
+              (resource) => resource.scriptId === scriptId,
+            )
+          : state.scriptResources
+        return rows.map((resource) => ({ ...resource })) as T
+      }
+      case 'saveScriptResources': {
+        const input = (args[0] ?? {}) as {
+          scriptId?: string
+          resources?: ScriptResourceRecord[]
+        }
+        const scriptId = String(input.scriptId ?? '')
+        const resources = Array.isArray(input.resources) ? input.resources : []
+        state.scriptResources = state.scriptResources.filter(
+          (resource) => resource.scriptId !== scriptId,
+        )
+        state.scriptResources.push(
+          ...resources.map((resource) => ({ ...resource, scriptId })),
+        )
         persist()
         return undefined as T
       }
@@ -368,14 +412,14 @@ export function createLocalBridge() {
         const kind = platform()
         return {
           name: 'MaiBrowser',
-          version: '0.1.1',
+          version: '0.1.2',
           platform: kind,
           dataPath: '',
           dbPath: '',
           downloadsPath: '',
           engine: kind === 'android' ? 'Android System WebView' : 'Lynxtron',
           versionLabel:
-            kind === 'android' ? '0.1.1 · Android' : '0.1.1 · Preview',
+            kind === 'android' ? '0.1.2 · Android' : '0.1.2 · Preview',
         } as AppInfo as T
       }
       if (method === 'app:theme') return 'light' as T

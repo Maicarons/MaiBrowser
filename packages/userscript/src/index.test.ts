@@ -133,4 +133,24 @@ describe('userscript metadata', () => {
       }),
     ).toBe('')
   })
+
+  test('injects required libraries and named resources', () => {
+    const meta = parseMetadata(source, 'en')
+    expect(meta).not.toBeNull()
+    if (!meta) return
+    const code = buildInjection(
+      [{ id: 'u_test', meta, source, enabled: true }],
+      {
+        url: 'https://example.com/page',
+        requires: { u_test: ['window.__required = true;'] },
+        resources: { u_test: { logo: 'data:image/png;base64,AA==' } },
+      },
+    )
+    expect(code).toContain('window.__required = true;')
+    expect(code).toContain('"logo":"data:image/png;base64,AA=="')
+    expect(code).toContain('data:text/plain;charset=utf-8,')
+    expect(code.indexOf('window.__required = true;')).toBeLessThan(
+      code.indexOf('GM_setValue'),
+    )
+  })
 })

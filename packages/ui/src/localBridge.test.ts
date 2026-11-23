@@ -80,4 +80,36 @@ describe('local bridge', () => {
     const tabs = await call<TabRecord[]>(bridge, 'listTabs', [])
     expect(tabs[0].url).toBe('https://example.com/')
   })
+
+  test('caches script requirements and resources', async () => {
+    const bridge = freshBridge()
+    await call(bridge, 'saveScriptResources', [
+      {
+        scriptId: 'u_resource',
+        resources: [
+          {
+            scriptId: 'u_resource',
+            name: 'require:https://cdn.example.test/lib.js',
+            mime: 'application/javascript',
+            content: 'window.lib = true;',
+          },
+          {
+            scriptId: 'u_resource',
+            name: 'resource:logo',
+            mime: 'text/plain',
+            content: 'mai-browser',
+          },
+        ],
+      },
+    ])
+    const rows = await call<Array<{ name: string; content: string }>>(
+      bridge,
+      'listScriptResources',
+      ['u_resource'],
+    )
+    expect(rows).toHaveLength(2)
+    expect(rows.find((row) => row.name === 'resource:logo')?.content).toBe(
+      'mai-browser',
+    )
+  })
 })

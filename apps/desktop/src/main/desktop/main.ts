@@ -7,7 +7,7 @@ import { LYNX_BUNDLE_PATH } from './vendorPaths'
 
 const isDev = process.env.NODE_ENV === 'development'
 const APP_NAME = 'MaiBrowser'
-const USER_AGENT = 'MaiBrowser/0.1.1 (+https://github.com/Maicarons/MaiBrowser)'
+const USER_AGENT = 'MaiBrowser/0.1.2 (+https://github.com/Maicarons/MaiBrowser)'
 const MAX_TEXT_BYTES = 2 * 1024 * 1024
 
 interface AppPaths {
@@ -44,8 +44,10 @@ const STORE_METHODS = new Set([
   'saveDownload',
   'deleteDownload',
   'listScripts',
+  'listScriptResources',
   'getScript',
   'saveScript',
+  'saveScriptResources',
   'deleteScript',
   'setScriptEnabled',
   'getScriptValues',

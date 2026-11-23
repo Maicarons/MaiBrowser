@@ -15,7 +15,7 @@
 | `permissions`          | 站点权限决策                                        |
 | `userscripts`          | 脚本源码与元数据                                    |
 | `userscript_values`    | 每个脚本的 GM 值                                    |
-| `userscript_resources` | 预留的 @resource 内容                               |
+| `userscript_resources` | @require / @resource 缓存内容                      |
 | `userscript_runs`      | 预留的运行记录                                      |
 
 ## 迁移
@@ -40,6 +40,8 @@ bridge.call('store:call', { method: 'listHistory', args: [100] })
 
 ## Android（0.1.x）
 
-Android 0.1.x 不链接 DuckDB，而是把同一组状态保存在 `filesDir/maibrowser-state.json`：设置、窗口/标签页会话、历史、书签、下载记录、脚本与脚本值。共享 UI 通过 `packages/ui/src/localBridge.ts` 读写快照，原生模块 `MaiBrowserNative` 负责落盘。这样首个版本在没有 NDK 构建链的设备上也能完整离线运行。
+Android 0.1.x 不链接 DuckDB，而是把同一组状态保存在 `filesDir/maibrowser-state.json`：设置、窗口/标签页会话、历史、书签、下载记录、脚本、脚本值与脚本资源。共享 UI 通过 `packages/ui/src/localBridge.ts` 读写快照，原生模块 `MaiBrowserNative` 负责落盘。
+
+0.1.2 起，快照先写入临时文件并 `fsync`，再原子 rename 到主文件；旧主文件保留为 `.bak`。启动时主文件解析失败会自动读取备份。快照顶层包含 `schemaVersion`，为后续迁移保留显式版本位。
 
 DuckDB 的 Android NDK/JNI 构建推迟到 0.3 评估。在它稳定前不引入 SQLite，避免同一产品出现第二套 SQL 方言；迁移到 DuckDB 时需要一次性导入这份 JSON 快照。

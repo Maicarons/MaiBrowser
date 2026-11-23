@@ -22,8 +22,13 @@ import {
   setTabPinned,
 } from '@maibrowser/core'
 import { createTranslator } from '@maibrowser/i18n'
-import type { Bookmark, HistoryEntry, TabRecord } from '@maibrowser/storage'
-import type { UserScript } from '@maibrowser/userscript'
+import type {
+  Bookmark,
+  HistoryEntry,
+  ScriptResourceRecord,
+  TabRecord,
+} from '@maibrowser/storage'
+import type { UserScript, UserScriptMeta } from '@maibrowser/userscript'
 import { buildInjection, parseMetadata } from '@maibrowser/userscript'
 import { createBridge } from './bridge'
 import type { MenuAction } from './Chrome'
@@ -185,6 +190,9 @@ export function App() {
   const [scriptValues, setScriptValues] = useState<
     Record<string, Record<string, string>>
   >({})
+  const [scriptResources, setScriptResources] = useState<
+    ScriptResourceRecord[]
+  >([])
   const [address, setAddress] = useState('')
   const [addressFocused, setAddressFocused] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -203,6 +211,7 @@ export function App() {
   const activeIdRef = useRef(activeId)
   const scriptsRef = useRef(scripts)
   const scriptValuesRef = useRef(scriptValues)
+  const scriptResourcesRef = useRef(scriptResources)
   const visitedRef = useRef<Record<string, string>>({})
   const toastTimer = useRef<number | null>(null)
 
@@ -211,6 +220,7 @@ export function App() {
   activeIdRef.current = activeId
   scriptsRef.current = scripts
   scriptValuesRef.current = scriptValues
+  scriptResourcesRef.current = scriptResources
 
   const storeCall = useCallback(
     function call<T>(method: string, ...args: unknown[]): Promise<T> {
@@ -273,6 +283,82 @@ export function App() {
     setDownloads(await storeCall<DownloadItem[]>('listDownloads', 100))
   }, [storeCall])
 
+  const fetchScriptResources = useCallback(
+    async (
+      meta: UserScriptMeta,
+      scriptId = meta.id,
+    ): Promise<ScriptResourceRecord[]> => {
+      const rows = new Map<string, ScriptResourceRecord>()
+      const fetchOne = async (
+        url: string,
+        name: string,
+        mime: string,
+      ): Promise<void> => {
+        if (!/^https?:\/\//i.test(url)) return
+        const content = await bridge.call<string>('net:fetchText', { url })
+        if (content.length > 2 * 1024 * 1024)
+          throw new Error(`Script resource is too large: ${url}`)
+        rows.set(name, { scriptId, name, mime, content })
+      }
+      await Promise.all([
+        ...meta.require.map((url) =>
+          fetchOne(url, `require:${url}`, 'application/javascript'),
+        ),
+        ...meta.resource.map((resource) =>
+          fetchOne(resource.url, `resource:${resource.name}`, 'text/plain'),
+        ),
+      ])
+      return [...rows.values()]
+    },
+    [bridge],
+  )
+
+  const ensureScriptResources = useCallback(
+    async (records: ScriptItem[], cached: ScriptResourceRecord[]) => {
+      const pending: Array<{ script: ScriptItem; meta: UserScriptMeta }> = []
+      for (const script of records) {
+        if (!script.enabled) continue
+        const meta = parseMetadata(script.source, settingsRef.current.locale)
+        if (!meta) continue
+        const have = new Set(
+          cached
+            .filter((resource) => resource.scriptId === script.id)
+            .map((resource) => resource.name),
+        )
+        const expected = [
+          ...meta.require
+            .filter((url) => /^https?:\/\//i.test(url))
+            .map((url) => `require:${url}`),
+          ...meta.resource
+            .filter((resource) => /^https?:\/\//i.test(resource.url))
+            .map((resource) => `resource:${resource.name}`),
+        ]
+        if (expected.length > 0 && !expected.every((name) => have.has(name))) {
+          pending.push({ script, meta })
+        }
+      }
+      if (pending.length === 0) return
+      let next = cached
+      for (const { script, meta } of pending) {
+        try {
+          const resources = await fetchScriptResources(meta, script.id)
+          await storeCall('saveScriptResources', {
+            scriptId: script.id,
+            resources,
+          })
+          next = [
+            ...next.filter((resource) => resource.scriptId !== script.id),
+            ...resources,
+          ]
+        } catch {
+          continue
+        }
+      }
+      setScriptResources(next)
+    },
+    [fetchScriptResources, storeCall],
+  )
+
   const loadScriptValues = useCallback(
     async (records: ScriptItem[]) => {
       const entries = await Promise.all(
@@ -294,25 +380,38 @@ export function App() {
   )
 
   const refreshScripts = useCallback(async () => {
-    const records = await storeCall<ScriptItem[]>('listScripts')
+    const [records, resources] = await Promise.all([
+      storeCall<ScriptItem[]>('listScripts'),
+      storeCall<ScriptResourceRecord[]>('listScriptResources'),
+    ])
     setScripts(records)
+    setScriptResources(resources)
     await loadScriptValues(records)
-  }, [loadScriptValues, storeCall])
+    await ensureScriptResources(records, resources)
+  }, [ensureScriptResources, loadScriptValues, storeCall])
 
   const refreshAll = useCallback(async () => {
-    const [nextHistory, nextBookmarks, nextDownloads, nextScripts] =
-      await Promise.all([
-        storeCall<HistoryEntry[]>('listHistory', 200),
-        storeCall<Bookmark[]>('listBookmarks'),
-        storeCall<DownloadItem[]>('listDownloads', 100),
-        storeCall<ScriptItem[]>('listScripts'),
-      ])
+    const [
+      nextHistory,
+      nextBookmarks,
+      nextDownloads,
+      nextScripts,
+      nextResources,
+    ] = await Promise.all([
+      storeCall<HistoryEntry[]>('listHistory', 200),
+      storeCall<Bookmark[]>('listBookmarks'),
+      storeCall<DownloadItem[]>('listDownloads', 100),
+      storeCall<ScriptItem[]>('listScripts'),
+      storeCall<ScriptResourceRecord[]>('listScriptResources'),
+    ])
     setHistory(nextHistory)
     setBookmarks(nextBookmarks)
     setDownloads(nextDownloads)
     setScripts(nextScripts)
+    setScriptResources(nextResources)
     await loadScriptValues(nextScripts)
-  }, [loadScriptValues, storeCall])
+    await ensureScriptResources(nextScripts, nextResources)
+  }, [ensureScriptResources, loadScriptValues, storeCall])
 
   useEffect(() => {
     let alive = true
@@ -328,6 +427,7 @@ export function App() {
           bookmarkRows,
           downloadRows,
           scriptRows,
+          scriptResourceRows,
           theme,
         ] = await Promise.all([
           bridge.call<AppInfo>('app:info'),
@@ -337,6 +437,7 @@ export function App() {
           storeCall<Bookmark[]>('listBookmarks'),
           storeCall<DownloadItem[]>('listDownloads', 100),
           storeCall<ScriptItem[]>('listScripts'),
+          storeCall<ScriptResourceRecord[]>('listScriptResources'),
           bridge.call<'light' | 'dark'>('app:theme'),
         ])
         if (!alive) return
@@ -375,6 +476,7 @@ export function App() {
         setBookmarks(bookmarkRows)
         setDownloads(downloadRows)
         setScripts(scriptRows)
+        setScriptResources(scriptResourceRows)
         setScriptValues(Object.fromEntries(valueEntries))
         setTabs(nextTabs)
         setActiveId(nextTabs[0].id)
@@ -852,10 +954,15 @@ export function App() {
         updatedAt: timestamp,
         updateUrl: meta.downloadUrl || sourceUrl || meta.updateUrl,
       }
+      const resources = await fetchScriptResources(meta)
       await storeCall('saveScript', record)
+      await storeCall('saveScriptResources', {
+        scriptId: meta.id,
+        resources,
+      })
       await refreshScripts()
     },
-    [refreshScripts, storeCall],
+    [fetchScriptResources, refreshScripts, storeCall],
   )
 
   const clearBrowsingData = useCallback(async () => {
@@ -923,6 +1030,7 @@ export function App() {
         const source = await fetchScript(script.updateUrl)
         const meta = parseMetadata(source, settingsRef.current.locale)
         if (!meta || !meta.version || meta.version === script.version) continue
+        const resources = await fetchScriptResources(meta, script.id)
         await storeCall('saveScript', {
           ...script,
           name: meta.name,
@@ -931,6 +1039,10 @@ export function App() {
           source,
           metadata: JSON.stringify(meta),
           updatedAt: Date.now(),
+        })
+        await storeCall('saveScriptResources', {
+          scriptId: script.id,
+          resources,
         })
         updated++
       } catch {
@@ -944,7 +1056,7 @@ export function App() {
         : t('scripts.upToDate'),
     )
     return updated
-  }, [fetchScript, notify, refreshScripts, storeCall, t])
+  }, [fetchScript, fetchScriptResources, notify, refreshScripts, storeCall, t])
 
   const openExternal = useCallback(
     (url: string) => {
@@ -973,31 +1085,46 @@ export function App() {
     [bridge, notify],
   )
 
-  const buildPageInit = useCallback(
-    (url: string) => {
-      const enabled = scriptsRef.current.filter((script) => script.enabled)
-      if (enabled.length === 0) return ''
-      const injections: UserScript[] = []
-      for (const script of enabled) {
-        const meta = parseMetadata(script.source, settingsRef.current.locale)
-        if (meta) {
-          injections.push({
-            id: script.id,
-            meta,
-            source: script.source,
-            enabled: true,
-          })
-        }
+  const buildPageInit = useCallback((url: string) => {
+    const enabled = scriptsRef.current.filter((script) => script.enabled)
+    if (enabled.length === 0) return ''
+    const injections: UserScript[] = []
+    const requires: Record<string, string[]> = {}
+    const resources: Record<string, Record<string, string>> = {}
+    for (const script of enabled) {
+      const meta = parseMetadata(script.source, settingsRef.current.locale)
+      if (!meta) continue
+      const cached = scriptResourcesRef.current.filter(
+        (resource) => resource.scriptId === script.id,
+      )
+      requires[script.id] = meta.require
+        .map(
+          (url) =>
+            cached.find((resource) => resource.name === `require:${url}`)
+              ?.content,
+        )
+        .filter((content): content is string => typeof content === 'string')
+      const named: Record<string, string> = {}
+      for (const resource of cached) {
+        if (resource.name.startsWith('resource:'))
+          named[resource.name.slice('resource:'.length)] = resource.content
       }
-      const built = buildInjection(injections, {
-        url,
-        values: scriptValuesRef.current,
-        locale: settingsRef.current.locale,
+      resources[script.id] = named
+      injections.push({
+        id: script.id,
+        meta,
+        source: script.source,
+        enabled: true,
       })
-      return built
-    },
-    [storeCall],
-  )
+    }
+    return buildInjection(injections, {
+      url,
+      values: scriptValuesRef.current,
+      requires,
+      resources,
+      locale: settingsRef.current.locale,
+    })
+  }, [])
 
   const handleWebMessage = useCallback(
     (tabId: string, message: string | Record<string, unknown>) => {

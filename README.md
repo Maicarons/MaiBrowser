@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.1"><img src="https://img.shields.io/github/v/release/Maicarons/MaiBrowser?style=flat-square&color=2dd4bf&label=release" alt="Latest release" /></a>
+  <a href="https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.2"><img src="https://img.shields.io/github/v/release/Maicarons/MaiBrowser?style=flat-square&color=2dd4bf&label=release" alt="Latest release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-2dd4bf?style=flat-square" alt="AGPL-3.0 license" /></a>
   <a href="https://github.com/Maicarons/MaiBrowser/releases"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Android-2dd4bf?style=flat-square" alt="Windows and Android" /></a>
   <a href="https://maicarons.github.io/MaiBrowser/"><img src="https://img.shields.io/badge/docs-website-2dd4bf?style=flat-square" alt="Documentation" /></a>
@@ -30,23 +30,23 @@
 
 MaiBrowser is an early-stage browser that keeps its data on your machine. The browser shell is a native Lynx view rather than a web app: the same ReactLynx components run on Windows through Lynxtron and CEF, and on Android through Sparkling and the system WebView.
 
-Version 0.1.1 is the current public release. Version 0.1.0 introduced the shared tabbed UI, history, bookmarks, download records, userscripts, themes, and local storage on both platforms; 0.1.1 rebuilds both artifacts with a corrected English motion hint and includes the new README and documentation. The Windows installer is not code-signed, and the Android APK is debug-signed; both are suitable for evaluation rather than production distribution.
+Version 0.1.2 is the current public release. Version 0.1.0 introduced the shared tabbed UI, history, bookmarks, download records, userscripts, themes, and local storage on both platforms. 0.1.1 corrected the English motion hint. 0.1.2 adds cached `@require` / `@resource` support for userscripts and makes the Android state snapshot atomic with a backup. The Windows installer is not code-signed, and the Android APK is debug-signed; both are suitable for evaluation rather than production distribution.
 
 ## Install
 
 ### Windows
 
-- **Download:** [MaiBrowser v0.1.1 for Windows x64](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.1/MaiBrowser-v0.1.1-win-x64-Setup.exe)
+- **Download:** [MaiBrowser v0.1.2 for Windows x64](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.2/MaiBrowser-v0.1.2-win-x64-Setup.exe)
 - **Requirements:** Windows 10 or 11, x64
 - **Notes:** The NSIS installer is unsigned, so Windows SmartScreen may show a warning. Verify the download against `SHA256SUMS.txt` before running it.
 
 ### Android
 
-- **Download:** [MaiBrowser v0.1.1 APK](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.1/MaiBrowser-v0.1.1-android-debug.apk)
+- **Download:** [MaiBrowser v0.1.2 APK](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.2/MaiBrowser-v0.1.2-android-debug.apk)
 - **Requirements:** Android 7.0 (API 24) or newer
 - **Notes:** The APK is debug-signed and is not distributed through Google Play. Enable installation from unknown sources for your browser or file manager, then open the APK. It supports `armeabi-v7a` and `arm64-v8a`.
 
-Release files and checksums live on the [releases page](https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.1).
+Release files and checksums live on the [releases page](https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.2).
 
 ## Screenshots
 
@@ -68,7 +68,7 @@ Release files and checksums live on the [releases page](https://github.com/Maica
 
 **Themes that stay out of the way.** Light, dark, and follow-system modes, seven accent colors, compact page transitions, and a motion switch. Content is never hidden while an animation runs.
 
-**Userscripts without an extension runtime.** MaiBrowser parses Tampermonkey metadata, matches `@match`, `@include`, and `@exclude`, and provides a `GM_*` / `GM.*` bridge for values, XHR, and menus. Scripts can be installed, enabled, disabled, updated, and removed from the built-in manager.
+**Userscripts without an extension runtime.** MaiBrowser parses Tampermonkey metadata, matches `@match`, `@include`, and `@exclude`, caches text `@require` / `@resource` dependencies, and provides a `GM_*` / `GM.*` bridge for values, XHR, resources, and menus. Scripts can be installed, enabled, disabled, updated, and removed from the built-in manager.
 
 **Local-first storage.** On Windows, history, bookmarks, downloads, userscripts, script values, and tab sessions are stored in a local DuckDB database. Android 0.1.x keeps the equivalent state in a private JSON snapshot. There are no accounts, no cloud sync, and no telemetry.
 

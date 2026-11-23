@@ -14,10 +14,13 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.File
+import java.io.FileOutputStream
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class MaiBrowserNativeModule(context: Context) : LynxModule(context) {
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val ioExecutor = Executors.newSingleThreadExecutor()
     private val client = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -25,27 +28,61 @@ class MaiBrowserNativeModule(context: Context) : LynxModule(context) {
 
     private fun stateFile(): File = File(mContext.filesDir, "maibrowser-state.json")
 
+    private fun backupFile(): File = File(mContext.filesDir, "maibrowser-state.json.bak")
+
+    private fun readValidState(file: File): String? {
+        return try {
+            if (!file.isFile) return null
+            val text = file.readText(Charsets.UTF_8)
+            if (text.isBlank()) return null
+            JSONObject(text)
+            text
+        } catch (error: Throwable) {
+            null
+        }
+    }
+
     private fun reply(callback: Callback, payload: String) {
         mainHandler.post { callback.invoke(payload) }
     }
 
     @LynxMethod
     fun loadState(callback: Callback) {
-        try {
-            val file = stateFile()
-            reply(callback, if (file.exists()) file.readText(Charsets.UTF_8) else "")
-        } catch (error: Throwable) {
-            reply(callback, "")
+        ioExecutor.execute {
+            val text = try {
+                readValidState(stateFile()) ?: readValidState(backupFile()) ?: ""
+            } catch (error: Throwable) {
+                ""
+            }
+            reply(callback, text)
         }
     }
 
     @LynxMethod
     fun saveState(json: String, callback: Callback) {
-        try {
-            stateFile().writeText(json, Charsets.UTF_8)
-            reply(callback, "true")
-        } catch (error: Throwable) {
-            reply(callback, "false")
+        ioExecutor.execute {
+            try {
+                JSONObject(json)
+                val target = stateFile()
+                val temp = File(mContext.filesDir, "maibrowser-state.json.tmp")
+                FileOutputStream(temp).use { output ->
+                    output.write(json.toByteArray(Charsets.UTF_8))
+                    output.fd.sync()
+                }
+                if (target.exists() && readValidState(target) != null) {
+                    target.copyTo(backupFile(), overwrite = true)
+                }
+                if (target.exists() && !target.delete()) {
+                    throw IllegalStateException("Cannot replace state file")
+                }
+                if (!temp.renameTo(target)) {
+                    temp.copyTo(target, overwrite = true)
+                    temp.delete()
+                }
+                reply(callback, "true")
+            } catch (error: Throwable) {
+                reply(callback, "false")
+            }
         }
     }
 
@@ -104,6 +141,6 @@ class MaiBrowserNativeModule(context: Context) : LynxModule(context) {
     }
 
     companion object {
-        private const val USER_AGENT = "MaiBrowser/0.1.1 (Android)"
+        private const val USER_AGENT = "MaiBrowser/0.1.2 (Android)"
     }
 }

@@ -35,6 +35,8 @@ export interface UserScript {
 export interface InjectionOptions {
   url: string
   values?: Record<string, Record<string, string>>
+  requires?: Record<string, string[]>
+  resources?: Record<string, Record<string, string>>
   locale?: Locale
   stage?: 'start' | 'end' | 'idle'
 }
@@ -205,6 +207,8 @@ const SHIM = String.raw`
   var __MB_ID = "__MB_ID__";
   var __MB_META = __MB_META_JSON__;
   var __MB_VALUES = __MB_VALUES_JSON__;
+  var __MB_RESOURCES = __MB_RESOURCES_JSON__;
+  var __MB_RESOURCE_URLS = __MB_RESOURCE_URLS_JSON__;
   var __MB_POST = function (method, params) {
     try {
       window.postMessage('__MB__' + JSON.stringify({
@@ -221,7 +225,7 @@ const SHIM = String.raw`
     script: __MB_META,
     scriptMetaStr: __MB_META.raw || '',
     scriptHandler: 'MaiBrowser',
-    version: '0.1.1',
+    version: '0.1.2',
     userAgent: navigator.userAgent
   };
   function GM_getValue(key, defaultValue) {
@@ -332,10 +336,10 @@ const SHIM = String.raw`
     delete __MB_LISTENERS[id];
   }
   function GM_getResourceText(name) {
-    return (window.__MB_RESOURCES__ || {})[name] || '';
+    return __MB_RESOURCES[name] || '';
   }
   function GM_getResourceURL(name) {
-    return (window.__MB_RESOURCE_URLS__ || {})[name] || '';
+    return __MB_RESOURCE_URLS[name] || '';
   }
   var GM = {
     getValue: function (key, defaultValue) { return Promise.resolve(GM_getValue(key, defaultValue)); },
@@ -396,12 +400,23 @@ const SHIM = String.raw`
 })();
 `
 
-function shimFor(script: UserScript, values: Record<string, string>): string {
+function shimFor(
+  script: UserScript,
+  values: Record<string, string>,
+  resources: Record<string, string> = {},
+): string {
+  const resourceUrls: Record<string, string> = {}
+  for (const [name, content] of Object.entries(resources)) {
+    resourceUrls[name] =
+      `data:text/plain;charset=utf-8,${encodeURIComponent(content)}`
+  }
   return SHIM.replace(/__MB_ID__/g, () => script.id)
     .replace(/__MB_META_JSON__/g, () =>
       JSON.stringify({ ...script.meta, raw: '' }),
     )
     .replace(/__MB_VALUES_JSON__/g, () => JSON.stringify(values ?? {}))
+    .replace(/__MB_RESOURCES_JSON__/g, () => JSON.stringify(resources))
+    .replace(/__MB_RESOURCE_URLS_JSON__/g, () => JSON.stringify(resourceUrls))
 }
 
 export function buildInjection(
@@ -415,11 +430,14 @@ export function buildInjection(
   const parts: string[] = []
   for (const script of active) {
     const values = options.values?.[script.id] ?? {}
+    const requires = options.requires?.[script.id] ?? []
+    const resources = options.resources?.[script.id] ?? {}
     const meta = { ...script.meta, id: script.id }
     const withMeta = { ...script, meta }
     parts.push(`/* == MaiBrowser userscript: ${script.meta.name} == */`)
-    parts.push(shimFor(withMeta, values))
     parts.push('try {')
+    if (requires.length > 0) parts.push(requires.join('\n;\n'))
+    parts.push(shimFor(withMeta, values, resources))
     parts.push(`;(function () {\n${script.source}\n}).call(window);`)
     parts.push(
       '} catch (error) { console.error("[MaiBrowser userscript]", error); }',

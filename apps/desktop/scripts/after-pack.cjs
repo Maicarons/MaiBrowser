@@ -23,7 +23,7 @@ module.exports = async function afterPack(context) {
     path.join(appDir, 'package.json'),
     JSON.stringify({
       name: 'maibrowser-packaging-stub',
-      version: '0.1.1',
+      version: '0.1.2',
       main: 'main.js',
     }),
   )
