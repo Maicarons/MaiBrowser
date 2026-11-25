@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.2.0 (2026-11-25)
+
+下载管理更新。
+
+### Added
+
+- 桌面端多连接下载：使用 `ipull` 并行分段请求，支持进度、暂停、继续、取消和失败重试。
+- 下载页显示实时进度条、已传输/总大小和状态；活动下载在页面打开时自动刷新。
+- 页面内 `<a download>`、带 `download` 语义的链接和油猴 `GM_download` 已接入统一下载管理器。
+- Android 使用系统 `DownloadManager` 下载到 `Downloads/MaiBrowser/`，支持状态同步、取消和完成通知。
+- 下载记录在重启后保留；中断的桌面下载会标记为失败并可重试。
+
+### Changed
+
+- Windows、Android 和根 `package.json` 统一为 `0.2.0`；Android `versionCode=4`。
+
+### Known limitations
+
+- CEF 绑定仍不提供原生下载事件，因此桌面拦截只覆盖显式下载链接和 `GM_download`；表单 POST、`blob:`、PDF 查看器触发的下载仍无法拦截。
+- 桌面下载不带 CEF 的 Cookie 或 HttpOnly 会话；需要登录的直链可能失败。
+- Android 下载由系统服务管理，不提供暂停/继续按钮；完成通知由系统 DownloadManager 展示。
+
 ## 0.1.2 (2026-11-23)
 
 脚本资源与 Android 存储可靠性更新。

@@ -66,12 +66,12 @@ export function createBridge(): NativeBridge {
         if (method === 'app:info') {
           return {
             name: 'MaiBrowser',
-            version: '0.1.2',
+            version: '0.2.0',
             platform: 'windows',
             dataPath: '',
             dbPath: '',
             engine: 'Lynxtron',
-            versionLabel: '0.1.2 (web preview)',
+            versionLabel: '0.2.0 (web preview)',
           } as T
         }
         throw new Error(

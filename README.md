@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.2"><img src="https://img.shields.io/github/v/release/Maicarons/MaiBrowser?style=flat-square&color=2dd4bf&label=release" alt="Latest release" /></a>
+  <a href="https://github.com/Maicarons/MaiBrowser/releases/tag/v0.2.0"><img src="https://img.shields.io/github/v/release/Maicarons/MaiBrowser?style=flat-square&color=2dd4bf&label=release" alt="Latest release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-2dd4bf?style=flat-square" alt="AGPL-3.0 license" /></a>
   <a href="https://github.com/Maicarons/MaiBrowser/releases"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Android-2dd4bf?style=flat-square" alt="Windows and Android" /></a>
   <a href="https://maicarons.github.io/MaiBrowser/"><img src="https://img.shields.io/badge/docs-website-2dd4bf?style=flat-square" alt="Documentation" /></a>
@@ -30,23 +30,23 @@
 
 MaiBrowser is an early-stage browser that keeps its data on your machine. The browser shell is a native Lynx view rather than a web app: the same ReactLynx components run on Windows through Lynxtron and CEF, and on Android through Sparkling and the system WebView.
 
-Version 0.1.2 is the current public release. Version 0.1.0 introduced the shared tabbed UI, history, bookmarks, download records, userscripts, themes, and local storage on both platforms. 0.1.1 corrected the English motion hint. 0.1.2 adds cached `@require` / `@resource` support for userscripts and makes the Android state snapshot atomic with a backup. The Windows installer is not code-signed, and the Android APK is debug-signed; both are suitable for evaluation rather than production distribution.
+Version 0.2.0 is the current public release. Version 0.1.0 introduced the shared tabbed UI, history, bookmarks, download records, userscripts, themes, and local storage on both platforms. 0.1.1 corrected the English motion hint, and 0.1.2 added cached `@require` / `@resource` support plus atomic Android state snapshots. 0.2.0 adds a multi-connection download manager on Windows, download controls and progress in the shared UI, and system DownloadManager support on Android. The Windows installer is not code-signed, and the Android APK is debug-signed; both are suitable for evaluation rather than production distribution.
 
 ## Install
 
 ### Windows
 
-- **Download:** [MaiBrowser v0.1.2 for Windows x64](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.2/MaiBrowser-v0.1.2-win-x64-Setup.exe)
+- **Download:** [MaiBrowser v0.2.0 for Windows x64](https://github.com/Maicarons/MaiBrowser/releases/download/v0.2.0/MaiBrowser-v0.2.0-win-x64-Setup.exe)
 - **Requirements:** Windows 10 or 11, x64
 - **Notes:** The NSIS installer is unsigned, so Windows SmartScreen may show a warning. Verify the download against `SHA256SUMS.txt` before running it.
 
 ### Android
 
-- **Download:** [MaiBrowser v0.1.2 APK](https://github.com/Maicarons/MaiBrowser/releases/download/v0.1.2/MaiBrowser-v0.1.2-android-debug.apk)
+- **Download:** [MaiBrowser v0.2.0 APK](https://github.com/Maicarons/MaiBrowser/releases/download/v0.2.0/MaiBrowser-v0.2.0-android-debug.apk)
 - **Requirements:** Android 7.0 (API 24) or newer
 - **Notes:** The APK is debug-signed and is not distributed through Google Play. Enable installation from unknown sources for your browser or file manager, then open the APK. It supports `armeabi-v7a` and `arm64-v8a`.
 
-Release files and checksums live on the [releases page](https://github.com/Maicarons/MaiBrowser/releases/tag/v0.1.2).
+Release files and checksums live on the [releases page](https://github.com/Maicarons/MaiBrowser/releases/tag/v0.2.0).
 
 ## Screenshots
 
@@ -70,7 +70,9 @@ Release files and checksums live on the [releases page](https://github.com/Maica
 
 **Userscripts without an extension runtime.** MaiBrowser parses Tampermonkey metadata, matches `@match`, `@include`, and `@exclude`, caches text `@require` / `@resource` dependencies, and provides a `GM_*` / `GM.*` bridge for values, XHR, resources, and menus. Scripts can be installed, enabled, disabled, updated, and removed from the built-in manager.
 
-**Local-first storage.** On Windows, history, bookmarks, downloads, userscripts, script values, and tab sessions are stored in a local DuckDB database. Android 0.1.x keeps the equivalent state in a private JSON snapshot. There are no accounts, no cloud sync, and no telemetry.
+**Downloads that finish.** Explicit download links and `GM_download` calls enter a desktop download manager built on `ipull`: four parallel range connections, progress, pause, resume, cancel, and retry. Android delegates to the system DownloadManager and syncs status back into the same download page.
+
+**Local-first storage.** On Windows, history, bookmarks, downloads, userscripts, script values, and tab sessions are stored in a local DuckDB database. Android keeps the equivalent state in a private JSON snapshot. There are no accounts, no cloud sync, and no telemetry.
 
 ## Architecture
 
@@ -132,21 +134,21 @@ Android build instructions, JDK selection, emulator setup, and WebView debugging
 - **Windows database:** `%APPDATA%\@maibrowser\desktop\maibrowser.duckdb`
 - **Windows downloads:** `MaiBrowser` inside your system Downloads folder
 - **Android state:** app-private `files/maibrowser-state.json`
-- **Android downloads:** recorded as metadata in 0.1.x; writing downloaded files is not wired yet
+- **Android downloads:** `MaiBrowser` inside the system Downloads folder, managed by DownloadManager
 
-MaiBrowser does not include accounts, cloud sync, telemetry, an ad blocker, or a password manager. Userscripts can read and modify the pages they match, so install them with the same care you would use in any browser. Android 0.1.x stores its state snapshot unencrypted inside the Android app sandbox, and its userscript bridge is a beta page-world design rather than a full sandbox.
+MaiBrowser does not include accounts, cloud sync, telemetry, an ad blocker, or a password manager. Userscripts can read and modify the pages they match, so install them with the same care you would use in any browser. Android stores its state snapshot unencrypted inside the Android app sandbox, and its userscript bridge is a beta page-world design rather than a full sandbox.
 
-## Known limitations in 0.1.x
+## Known limitations in 0.2.0
 
-- Downloads are not connected to the CEF or Android download managers yet; the downloads page manages records only.
+- Desktop downloads are started from explicit `<a download>` links or `GM_download`; CEF still exposes no native download event, so form POSTs, `blob:` URLs, and PDF-viewer downloads are not intercepted. Desktop downloads do not carry CEF cookies, so authenticated links may fail.
 - Private tabs do not isolate cookies. They only avoid writing history and session state.
 - Multi-window browsing, site permission prompts, certificate error pages, and an auto-update UI are not implemented.
-- Android bookmark import/export, file downloads, and DuckDB storage are not available in 0.1.x.
+- Android bookmark import/export and DuckDB storage are not available; Android downloads are managed by the system service without pause/resume controls.
 - Userscripts are injected after page load rather than at the true document start. On Android the bridge is a beta page-world design.
 - After choosing an address-bar suggestion on some Android devices, navigation succeeds but the native input may not immediately show the final URL.
 - The Windows installer is unsigned and the Android APK is debug-signed.
 
-The [v0.2 plan](docs/guide/v0.2-plan.md) covers downloads, permission prompts, Android parity, release engineering, and the storage decision in more detail.
+The [v0.2 research](docs/guide/v0.2-plan.md) covers the upstream CEF download, permission, and request-context work still ahead.
 
 ## Contributing
 

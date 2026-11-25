@@ -33,6 +33,40 @@ export const PAGE_BOOTSTRAP = `(function () {
     var replace = history.replaceState;
     history.pushState = function () { var result = push.apply(this, arguments); setTimeout(meta, 20); return result; };
     history.replaceState = function () { var result = replace.apply(this, arguments); setTimeout(meta, 20); return result; };
+    function sendDownload(url, name) {
+      try {
+        if (!/^https?:/i.test(String(url))) return false;
+        window.postMessage('__MB_DOWNLOAD__' + JSON.stringify({ url: String(url), fileName: name || '', mime: '' }), '*');
+        return true;
+      } catch (e) { return false; }
+    }
+    document.addEventListener('click', function (event) {
+      try {
+        var node = event.target;
+        while (node && node !== document && (!node.getAttribute || String(node.tagName).toLowerCase() !== 'a')) node = node.parentNode;
+        if (!node || node === document || String(node.tagName).toLowerCase() !== 'a') return;
+        var rawHref = node.getAttribute('href') || '';
+        if (!rawHref) return;
+        var marked = node.hasAttribute('download');
+        var rel = node.getAttribute('rel') || '';
+        if (!marked && !/download/i.test(rel)) return;
+        var absolute = node.href || rawHref;
+        var name = node.getAttribute('download') || '';
+        if (sendDownload(absolute, name)) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      } catch (e) {}
+    }, true);
+    window.addEventListener('gm:download', function (event) {
+      try {
+        var detail = (event && event.detail) || {};
+        var url = detail.url || detail.href || '';
+        if (!url) return;
+        if (event.preventDefault) event.preventDefault();
+        sendDownload(url, detail.name || detail.fileName || '');
+      } catch (e) {}
+    }, true);
   } catch (e) {}
 })();`
 

@@ -2,12 +2,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 import cefWebview from '@lynx-js/cef-webview/lynxtron'
 import { app, clipboard, dialog, LynxWindow, shell } from '@lynx-js/lynxtron'
+import { DownloadManager } from './downloads'
 import { openStore } from './duckdb'
 import { LYNX_BUNDLE_PATH } from './vendorPaths'
 
 const isDev = process.env.NODE_ENV === 'development'
 const APP_NAME = 'MaiBrowser'
-const USER_AGENT = 'MaiBrowser/0.1.2 (+https://github.com/Maicarons/MaiBrowser)'
+const USER_AGENT = 'MaiBrowser/0.2.0 (+https://github.com/Maicarons/MaiBrowser)'
 const MAX_TEXT_BYTES = 2 * 1024 * 1024
 
 interface AppPaths {
@@ -166,6 +167,12 @@ async function start(): Promise<void> {
   app.setAppUserModelId('com.maibrowser')
   cefWebview.initialize()
   const store = await openStore(paths)
+  const downloadManager = new DownloadManager(
+    store,
+    paths.downloads,
+    USER_AGENT,
+  )
+  await downloadManager.init()
 
   const win = new LynxWindow({
     width: 1320,
@@ -311,6 +318,21 @@ async function start(): Promise<void> {
       win.close()
       return true
     }
+    if (method === 'downloads:start' || method === 'downloads:retry') {
+      return downloadManager.start(params)
+    }
+    if (method === 'downloads:sync' || method === 'downloads:list') {
+      return downloadManager.list()
+    }
+    if (method === 'downloads:pause') {
+      return downloadManager.pause(String(params.id ?? ''))
+    }
+    if (method === 'downloads:resume') {
+      return downloadManager.resume(String(params.id ?? ''))
+    }
+    if (method === 'downloads:cancel') {
+      return downloadManager.cancel(String(params.id ?? ''))
+    }
     if (method === 'downloads:openFolder') {
       return shell.openPath(paths.downloads)
     }
@@ -329,6 +351,10 @@ async function start(): Promise<void> {
       console.error('[MaiBrowser] RPC failed:', error)
       event.sendReply(failure(error))
     }
+  })
+
+  app.on('before-quit', () => {
+    void downloadManager.dispose()
   })
 
   win.show()

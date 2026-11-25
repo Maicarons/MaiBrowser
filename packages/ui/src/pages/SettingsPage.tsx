@@ -71,7 +71,7 @@ export function SettingsPage(props: InternalPageProps) {
           className="settings-profile-version"
           style={{ color: theme.textFaint }}
         >
-          v{props.appInfo?.version ?? '0.1.2'}
+          v{props.appInfo?.version ?? '0.2.0'}
         </text>
       </view>
 

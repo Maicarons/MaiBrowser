@@ -68,6 +68,13 @@ export interface ScriptItem {
   updateUrl: string
 }
 
+export interface DownloadStartRequest {
+  url: string
+  fileName?: string
+  mime?: string
+  referrer?: string
+}
+
 export interface InternalPageProps {
   page: string
   settings: BrowserSettings
@@ -94,6 +101,11 @@ export interface InternalPageProps {
   refreshHistory: (query?: string) => void
   refreshScripts: () => void
   refreshDownloads: () => void
+  startDownload: (request: DownloadStartRequest) => Promise<DownloadItem | null>
+  pauseDownload: (item: DownloadItem) => void
+  resumeDownload: (item: DownloadItem) => void
+  cancelDownload: (item: DownloadItem) => void
+  retryDownload: (item: DownloadItem) => void
   deleteDownload: (id: string) => void
   deleteScript: (id: string) => void
   toggleScript: (id: string, enabled: boolean) => void

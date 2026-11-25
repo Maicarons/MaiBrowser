@@ -50,6 +50,7 @@ import type {
   AppInfo,
   BrowserSettings,
   DownloadItem,
+  DownloadStartRequest,
   ScriptItem,
 } from './types'
 import { DEFAULT_SETTINGS } from './types'
@@ -238,6 +239,12 @@ export function App() {
     ) as unknown as number
   }, [])
 
+  const translator = useMemo(
+    () => createTranslator(settings.locale),
+    [settings.locale],
+  )
+  const t = translator.t
+
   const syncAddress = useCallback((value: string) => {
     setAddress(value)
   }, [])
@@ -280,8 +287,78 @@ export function App() {
   }, [storeCall])
 
   const refreshDownloads = useCallback(async () => {
-    setDownloads(await storeCall<DownloadItem[]>('listDownloads', 100))
-  }, [storeCall])
+    const rows = await bridge
+      .call<DownloadItem[]>('downloads:sync')
+      .catch(() => storeCall<DownloadItem[]>('listDownloads', 100))
+    setDownloads(rows)
+  }, [bridge, storeCall])
+
+  const startDownload = useCallback(
+    async (request: DownloadStartRequest): Promise<DownloadItem | null> => {
+      try {
+        const item = await bridge.call<DownloadItem>('downloads:start', {
+          url: request.url,
+          fileName: request.fileName ?? '',
+          mime: request.mime ?? '',
+          referrer: request.referrer ?? '',
+        })
+        setDownloads((current) => [
+          item,
+          ...current.filter((row) => row.id !== item.id),
+        ])
+        notify(t('downloads.started'))
+        return item
+      } catch (error) {
+        notify(errorMessage(error))
+        return null
+      }
+    },
+    [bridge, notify, t],
+  )
+
+  const pauseDownload = useCallback(
+    (item: DownloadItem) => {
+      void bridge
+        .call('downloads:pause', { id: item.id })
+        .then(() => refreshDownloads())
+        .catch((error) => notify(errorMessage(error)))
+    },
+    [bridge, notify, refreshDownloads],
+  )
+
+  const resumeDownload = useCallback(
+    (item: DownloadItem) => {
+      void bridge
+        .call('downloads:resume', { id: item.id })
+        .then(() => refreshDownloads())
+        .catch((error) => notify(errorMessage(error)))
+    },
+    [bridge, notify, refreshDownloads],
+  )
+
+  const cancelDownload = useCallback(
+    (item: DownloadItem) => {
+      void bridge
+        .call('downloads:cancel', { id: item.id })
+        .then(() => {
+          notify(t('downloads.cancelledNotice'))
+          return refreshDownloads()
+        })
+        .catch((error) => notify(errorMessage(error)))
+    },
+    [bridge, notify, refreshDownloads, t],
+  )
+
+  const retryDownload = useCallback(
+    (item: DownloadItem) => {
+      void startDownload({
+        url: item.url,
+        fileName: item.fileName,
+        mime: item.mime,
+      })
+    },
+    [startDownload],
+  )
 
   const fetchScriptResources = useCallback(
     async (
@@ -350,9 +427,7 @@ export function App() {
             ...next.filter((resource) => resource.scriptId !== script.id),
             ...resources,
           ]
-        } catch {
-          continue
-        }
+        } catch {}
       }
       setScriptResources(next)
     },
@@ -528,15 +603,25 @@ export function App() {
     () => themeFor(themeMode, settings.accent),
     [settings.accent, themeMode],
   )
-  const translator = useMemo(
-    () => createTranslator(settings.locale),
-    [settings.locale],
-  )
-  const t = translator.t
   const searchEngine =
     SEARCH_ENGINES.find((engine) => engine.id === settings.searchEngineId) ??
     DEFAULT_SEARCH_ENGINE
   const activeTab = tabs.find((tab) => tab.id === activeId) ?? tabs[0]
+
+  useEffect(() => {
+    if (activeTab?.internalRoute !== 'downloads') return
+    const active = downloads.some(
+      (item) =>
+        item.state === 'downloading' ||
+        item.state === 'queued' ||
+        item.state === 'paused',
+    )
+    if (!active) return
+    const timer = setInterval(() => {
+      void refreshDownloads().catch(() => undefined)
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [activeTab?.internalRoute, downloads, refreshDownloads])
   const webTabs = tabs.filter(
     (tab) => tab.kind === 'web' && tab.url && !isInternalUrl(tab.url),
   )
@@ -1130,6 +1215,25 @@ export function App() {
     (tabId: string, message: string | Record<string, unknown>) => {
       const raw =
         typeof message === 'string' ? message : JSON.stringify(message)
+      if (raw.startsWith('__MB_DOWNLOAD__')) {
+        try {
+          const request = JSON.parse(raw.slice(15)) as {
+            url?: string
+            fileName?: string
+            mime?: string
+          }
+          if (request.url) {
+            void startDownload({
+              url: request.url,
+              fileName: request.fileName ?? '',
+              mime: request.mime ?? '',
+            })
+          }
+        } catch {
+          // ignore malformed download messages
+        }
+        return
+      }
       if (raw.startsWith('__MB_META__')) {
         try {
           const meta = JSON.parse(raw.slice(11)) as {
@@ -1225,7 +1329,17 @@ export function App() {
             )
           })
       } else if (method === 'gm:download') {
-        notify('Download handler is not wired yet')
+        const url = String(params.url ?? '')
+        if (!/^https?:\/\//i.test(url)) {
+          notify(t('downloads.invalidUrl'))
+          return
+        }
+        void startDownload({
+          url,
+          fileName: String(params.name ?? params.fileName ?? ''),
+          mime: String(params.mime ?? ''),
+          referrer: String(params.referrer ?? ''),
+        })
       }
     },
     [
@@ -1234,6 +1348,7 @@ export function App() {
       evalInWebview,
       notify,
       refreshHistory,
+      startDownload,
       storeCall,
       t,
       updateTab,
@@ -1470,6 +1585,11 @@ export function App() {
     refreshHistory: (query?: string) => void refreshHistory(query),
     refreshScripts: () => void refreshScripts(),
     refreshDownloads: () => void refreshDownloads(),
+    startDownload,
+    pauseDownload,
+    resumeDownload,
+    cancelDownload,
+    retryDownload,
     deleteDownload: (id: string) => void deleteDownload(id),
     deleteScript: (id: string) => void deleteScript(id),
     toggleScript: (id: string, enabled: boolean) =>

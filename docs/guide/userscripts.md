@@ -29,7 +29,7 @@ MaiBrowser 原生解析 Tampermonkey 风格的脚本，不依赖扩展运行时�
 
 - `@run-at document-start` 实际在页面加载后注入，属于兼容性差距。
 - `@require` / `@resource` 当前只支持 HTTP(S) 文本资源，单文件上限 2 MB；二进制资源尚未支持。
-- `GM_download` 仍等待下载管理器接通。
+- `GM_download` 已接入下载管理器，接受字符串 URL 或 `{ url, name }` / `{ url, fileName }` 对象；只支持 http(s) 直链。
 - 脚本没有独立沙箱；安装页面会明确提示。
 
 ## 测试

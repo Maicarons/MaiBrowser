@@ -1,6 +1,6 @@
 {
   "name": "@maibrowser/desktop",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "type": "module",
   "main": "main.js",
   "scripts": {
@@ -54,7 +54,8 @@
   "dependencies": {
     "@duckdb/node-api": "2.0.1-r.1",
     "@lynx-js/cef-webview": "0.0.31",
-    "@lynx-js/motion": "0.0.8"
+    "@lynx-js/motion": "0.0.8",
+    "ipull": "4.0.3"
   },
   "description": "MaiBrowser desktop browser (Windows, Lynxtron + CEF)",
   "author": "MaiBrowser contributors"

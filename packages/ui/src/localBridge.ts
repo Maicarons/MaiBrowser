@@ -29,6 +29,14 @@ interface NativeModule {
   openExternal?: (url: string, callback: (value: string) => void) => void
   writeClipboard?: (text: string) => void
   readClipboard?: (callback: (value: string) => void) => void
+  downloadsStart?: (json: string, callback: (value: string) => void) => void
+  downloadsSync?: (json: string, callback: (value: string) => void) => void
+  downloadsCancel?: (id: string, callback: (value: string) => void) => void
+  openDownloadedFile?: (
+    uri: string,
+    mime: string,
+    callback: (value: string) => void,
+  ) => void
 }
 
 const HISTORY_WINDOW = 30 * 60 * 1000
@@ -274,9 +282,7 @@ export function createLocalBridge() {
         persist()
         return undefined as T
       case 'listDownloads':
-        return [...state.downloads]
-          .sort((a, b) => b.startedAt - a.startedAt)
-          .slice(0, Number(args[0] ?? 100)) as T
+        return sortedDownloads(Number(args[0] ?? 100)) as T
       case 'saveDownload': {
         const record = args[0] as DownloadRecord
         state.downloads = state.downloads.filter(
@@ -389,6 +395,64 @@ export function createLocalBridge() {
     }
   }
 
+  function sortedDownloads(limit = 100): DownloadRecord[] {
+    return [...state.downloads]
+      .sort((a, b) => b.startedAt - a.startedAt)
+      .slice(0, limit)
+  }
+
+  async function syncDownloads(): Promise<DownloadRecord[]> {
+    await ensureState()
+    const active = state.downloads.filter(
+      (record) =>
+        record.id.startsWith('android:') && record.state !== 'completed',
+    )
+    if (active.length > 0 && native?.downloadsSync) {
+      try {
+        const raw = await callNative<string>((callback) =>
+          native.downloadsSync?.(
+            JSON.stringify(active.map((record) => record.id.slice(8))),
+            callback,
+          ),
+        )
+        const updates = JSON.parse(raw) as Record<
+          string,
+          {
+            state?: string
+            receivedBytes?: number
+            totalBytes?: number
+            filePath?: string
+            mime?: string
+            error?: string
+          }
+        >
+        state.downloads = state.downloads.map((record) => {
+          if (!record.id.startsWith('android:')) return record
+          const update = updates[record.id.slice(8)]
+          if (!update) return record
+          const next: DownloadRecord = {
+            ...record,
+            state: update.state ?? record.state,
+            receivedBytes: update.receivedBytes ?? record.receivedBytes,
+            totalBytes: update.totalBytes ?? record.totalBytes,
+            filePath: update.filePath ?? record.filePath,
+            mime: update.mime || record.mime,
+            error: update.error ?? record.error,
+          }
+          if (next.state === 'completed' && !next.finishedAt)
+            next.finishedAt = Date.now()
+          if (next.state === 'failed' && !next.finishedAt)
+            next.finishedAt = Date.now()
+          return next
+        })
+        persist()
+      } catch {
+        // keep the last known state when the system service is unavailable
+      }
+    }
+    return sortedDownloads()
+  }
+
   async function requestText(input: Record<string, unknown>): Promise<string> {
     const url = String(input.url ?? '')
     if (fetchText) return fetchText(url)
@@ -412,14 +476,14 @@ export function createLocalBridge() {
         const kind = platform()
         return {
           name: 'MaiBrowser',
-          version: '0.1.2',
+          version: '0.2.0',
           platform: kind,
           dataPath: '',
           dbPath: '',
           downloadsPath: '',
           engine: kind === 'android' ? 'Android System WebView' : 'Lynxtron',
           versionLabel:
-            kind === 'android' ? '0.1.2 · Android' : '0.1.2 · Preview',
+            kind === 'android' ? '0.2.0 · Android' : '0.2.0 · Preview',
         } as AppInfo as T
       }
       if (method === 'app:theme') return 'light' as T
@@ -441,6 +505,82 @@ export function createLocalBridge() {
           String(input.method ?? ''),
           Array.isArray(input.args) ? input.args : [],
         )
+      }
+      if (method === 'downloads:start') {
+        await ensureState()
+        if (!native?.downloadsStart) {
+          throw new Error('Downloads are unavailable on this platform')
+        }
+        const url = String(input.url ?? '')
+        if (!/^https?:\/\//i.test(url)) {
+          throw new Error('Only http(s) download URLs are supported')
+        }
+        const raw = await callNative<string>((callback) =>
+          native.downloadsStart?.(
+            JSON.stringify({
+              url,
+              fileName: String(input.fileName ?? ''),
+              mime: String(input.mime ?? ''),
+            }),
+            callback,
+          ),
+        )
+        const result = JSON.parse(raw) as {
+          ok?: boolean
+          id?: string
+          fileName?: string
+          error?: string
+        }
+        if (!result.ok || !result.id) {
+          throw new Error(result.error || 'Download could not be started')
+        }
+        const record: DownloadRecord = {
+          id: `android:${result.id}`,
+          url,
+          fileName: result.fileName || `download-${Date.now()}.bin`,
+          filePath: '',
+          mime: String(input.mime ?? ''),
+          totalBytes: 0,
+          receivedBytes: 0,
+          state: 'downloading',
+          startedAt: Date.now(),
+          finishedAt: null,
+          error: '',
+        }
+        state.downloads = [
+          record,
+          ...state.downloads.filter((item) => item.id !== record.id),
+        ]
+        persist()
+        return record as T
+      }
+      if (method === 'downloads:sync' || method === 'downloads:list') {
+        return (await syncDownloads()) as T
+      }
+      if (method === 'downloads:pause' || method === 'downloads:resume') {
+        throw new Error('Pause and resume are not available on Android')
+      }
+      if (method === 'downloads:cancel') {
+        await ensureState()
+        const id = String(input.id ?? '')
+        const nativeId = id.replace(/^android:/, '')
+        if (native?.downloadsCancel) {
+          await callNative<string>((callback) =>
+            native.downloadsCancel?.(nativeId, callback),
+          )
+        }
+        state.downloads = state.downloads.map((record) =>
+          record.id === id
+            ? {
+                ...record,
+                state: 'cancelled',
+                finishedAt: Date.now(),
+                error: '',
+              }
+            : record,
+        )
+        persist()
+        return (state.downloads.find((record) => record.id === id) ?? null) as T
       }
       if (method === 'net:fetchText') {
         return (await requestText(input)) as T
@@ -464,7 +604,15 @@ export function createLocalBridge() {
         }
         return true as T
       }
-      if (method === 'shell:openPath') return '' as T
+      if (method === 'shell:openPath') {
+        const target = String(input.path ?? '')
+        if (target && native?.openDownloadedFile) {
+          await callNative<string>((callback) =>
+            native.openDownloadedFile?.(target, '', callback),
+          )
+        }
+        return true as T
+      }
       if (method === 'shell:showItemInFolder') return true as T
       if (method === 'clipboard:writeText') {
         native?.writeClipboard?.(String(input.text ?? ''))
